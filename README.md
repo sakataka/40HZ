@@ -140,81 +140,89 @@ The final panel states the current evidence position in narrow terms:
 
 The source list links to the studies used for this framing and labels them by scope rather than treating them as direct validation of the app.
 
-## Technical Background and Logic
+## Research Background and Evidence
 
-### Audio generation
+### Why this app focuses on 40 Hz
 
-The audio path is centered on [src/audio/engine.ts](/Users/sakataka/40Hz/src/audio/engine.ts). The app creates an `AudioContext`, loads an `AudioWorklet`, and routes the generated signal through a master `GainNode` before playback.
+Interest in `40 Hz` stimulation comes from a broader line of work on gamma-band activity, especially in Alzheimer's disease and related cognitive-aging research. In that literature, the central idea is not that `40 Hz` audio has an established consumer-use protocol, but that `40 Hz` sensory stimulation is a plausible research target for neural entrainment.
 
-At runtime, the engine:
+For this app, the practical takeaway is narrow:
 
-- sets a fixed `pulseHz` value of `40`
-- applies the selected base tone through `carrierHz`
-- switches between `sine` and `gated` modulation styles
-- mixes in generated background noise
-- uses fade-in and fade-out ramps to reduce abrupt starts and stops
+- `40 Hz` is kept fixed as the pulse rate
+- the app treats that choice as the main research-informed parameter
+- the app does not claim that the remaining settings are clinically optimized
 
-If playback is already active, setting changes are pushed into the running graph instead of creating a second audio context.
+### What this app actually borrows from the literature
 
-### Default derivation
+The current design is based on a small number of limited, human-facing reference points rather than a mature clinical standard.
 
-The default-setting logic lives in [src/lib/settings.ts](/Users/sakataka/40Hz/src/lib/settings.ts).
+#### 1. Human EEG entrainment work
 
-`deriveSessionSettings()` combines three inputs:
+[Han et al., 2023](https://pubmed.ncbi.nlm.nih.gov/37007205/) compared several auditory entrainment conditions in humans and reported that, within that experiment, a `40 Hz` sinusoidal sound in the closed-eye condition produced the strongest prefrontal `40 Hz` neural response among the tested conditions.
 
-- `RecommendationProfile`
-- `UserContext`
-- `CalibrationResult`
+That study informs two parts of the app:
 
-From those values it derives:
+- the default `Recommended` mode uses a `sine`-style modulation profile
+- the app mentions eyes-closed listening only as an optional listening tip, not as a guarantee of a stronger or more useful effect
 
-- session duration
-- starting volume
-- fade length
-- noise level
-- modulation style
-- selected base tone
+The app does not treat this paper as proof of clinical benefit. It uses it only as a narrow cue for a conservative default mode.
 
-The rules are intentionally simple. They are conservative usability heuristics rather than an attempt to infer a physiologically optimal setting for a given person.
+#### 2. Human clinical interest in sensory gamma stimulation
 
-### Session management and persistence
+[Chan et al., 2022](https://pubmed.ncbi.nlm.nih.gov/36454969/) is relevant because it helped establish human clinical interest in daily `40 Hz` sensory stimulation in mild Alzheimer's disease. That study focused on combined light and sound, not an audio-only consumer listening tool.
 
-[src/features/session/useSession.ts](/Users/sakataka/40Hz/src/features/session/useSession.ts) coordinates the app state.
+For this reason, the app uses that literature only as background context:
 
-It is responsible for:
+- it supports the claim that `40 Hz` sensory stimulation is an active human research area
+- it does not justify treatment claims for this app
+- it does not justify treating audio-only settings in this app as clinically validated
 
-- onboarding completion state
-- tone-check completion state
-- session start and stop
-- countdown updates while running
-- automatic stop when the timer reaches zero
-- recalculating remaining time when the tab becomes visible again
-- saving preferences to `localStorage`
+This distinction matters because the stronger human interventional literature is weighted toward audiovisual protocols and disease-specific cohorts rather than general adult audio-only use.
 
-The hook also keeps the currently active settings synchronized with the audio engine so that volume, fade, base tone, and noise changes can be applied while playback is running.
+#### 3. Acceptability and comfort data for sound-based use
 
-### Data model
+[Wang et al., 2024](https://pubmed.ncbi.nlm.nih.gov/38402805/) is useful mainly as an acceptability reference. In older adults with mild cognitive impairment, the study reported that raw `40 Hz` sound could be uncomfortable, while music-based variants were generally easier to tolerate.
 
-The main types are defined in `src/features/session/types.ts`.
+That does not provide a direct parameter rule for this app, but it does support a cautious product stance:
 
-- `RecommendationProfile`
-  Describes the app's named listening modes, including label, summary text, modulation style, and duration.
-- `UserContext`
-  Stores `soundSensitivity` and `outputMode` from onboarding.
-- `CalibrationResult`
-  Stores the selected base tone, whether the tone check was skipped, and when it was completed.
-- `SessionSettings`
-  Stores the active session configuration, including the fixed `40 Hz` pulse, base tone, fades, background noise level, duration, and modulation style.
+- the app starts from relatively low volume defaults
+- the `Gentle` mode keeps a softer entry point
+- fades are treated as comfort features rather than evidence-backed treatment settings
 
-### Evidence framing
+In other words, the app borrows the comfort lesson, not a claim of efficacy.
 
-The app is best described as research-informed. It is not clinically validated, and the literature cited in the UI does not establish a standard audio-only consumer protocol.
+#### 4. Variability across age and related factors
 
-In practical terms, this means:
+[Mockevičius et al., 2026](https://pubmed.ncbi.nlm.nih.gov/41671727/) reviewed developmental and aging trajectories of `40 Hz` auditory steady-state responses across the human lifespan. The practical implication for this app is that response patterns are not simple enough to support a product-ready age rule.
 
-- the fixed `40 Hz` pulse is the central design choice
-- the default modes are simplified listening presets, not treatment modes
-- the tone check is a preference step, not an optimization procedure
-- age- and sex-based auto-tuning is omitted because the literature is not sufficiently consistent for product use
+This is part of the reason the app does **not**:
 
-This approach keeps the implementation aligned with the current evidence limits while still providing a usable listening tool.
+- auto-adjust settings by age
+- auto-adjust settings by sex
+- present the base-tone choice as a physiological optimization step
+
+Instead, the app uses a simple tone check and conservative defaults.
+
+### What the app does not claim
+
+The literature used here does not establish a standard audio-only consumer protocol. It also does not support strong claims about immediate cognitive benefit for general users of this app.
+
+The README therefore keeps several boundaries explicit:
+
+- this app is research-informed, not clinically validated
+- the presets are listening presets, not treatment modes
+- the tone check is a preference step, not a biomarker-driven calibration
+- comfort settings such as fades and low starting volume are usability choices, not evidence-backed therapeutic parameters
+
+### How to read the source list in the app
+
+The source list is intended to show where the app's framing comes from, not to imply direct validation of the product.
+
+In practical terms:
+
+- the EEG entrainment paper informs the default pulse style and the optional eyes-closed note
+- the audiovisual Alzheimer's study supports the broader research relevance of `40 Hz` sensory stimulation
+- the acceptability study supports a more conservative comfort posture for sound-based use
+- the lifespan review supports the decision to avoid demographic auto-tuning
+
+This is the level at which the app uses the literature. It is better understood as a conservative synthesis of limited evidence than as a direct implementation of any single published protocol.
