@@ -199,9 +199,9 @@ a {
 }
 
 .preset-card:hover,
-.ghost-button:hover,
+.ghost-button:not(:disabled):hover,
 .duration-chip:hover,
-.inline-toggle:hover {
+.inline-toggle:not(:disabled):hover {
   transform: translateY(-1px);
   border-color: rgba(141, 217, 255, 0.34);
 }
@@ -303,7 +303,8 @@ a {
 }
 
 .primary-button:disabled,
-.ghost-button:disabled {
+.ghost-button:disabled,
+.inline-toggle:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

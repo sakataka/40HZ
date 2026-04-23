@@ -11,6 +11,7 @@ type PlayerPanelProps = {
   profiles: RecommendationProfile[];
   activeProfile: RecommendationProfile;
   activeBaseToneHz: number;
+  readyToStart: boolean;
   settings: SessionSettings;
   sessionState: SessionState;
   userContext: UserContext;
@@ -25,6 +26,7 @@ export function PlayerPanel({
   profiles,
   activeProfile,
   activeBaseToneHz,
+  readyToStart,
   settings,
   sessionState,
   userContext,
@@ -36,7 +38,7 @@ export function PlayerPanel({
 }: PlayerPanelProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showExploratory, setShowExploratory] = useState(false);
-  const canStart = sessionState.status === 'idle';
+  const canStart = readyToStart && sessionState.status === 'idle';
   const canStop = sessionState.status === 'running';
   const limitedProfiles = profiles.filter((profile) => profile.evidenceLevel === 'limited');
   const experimentalProfiles = profiles.filter((profile) => profile.evidenceLevel === 'experimental');

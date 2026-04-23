@@ -15,6 +15,7 @@ export default function App({ engine = sharedAudioEngine }: AppProps) {
   const {
     activeProfile,
     activeBaseToneHz,
+    calibrationBusy,
     calibrationComplete,
     completeCalibration,
     completeOnboarding,
@@ -67,6 +68,7 @@ export default function App({ engine = sharedAudioEngine }: AppProps) {
         profiles={RECOMMENDATION_PROFILES}
         activeProfile={activeProfile}
         activeBaseToneHz={activeBaseToneHz}
+        readyToStart={setupComplete && calibrationComplete}
         sessionState={sessionState}
         settings={settings}
         userContext={userContext}
@@ -85,6 +87,7 @@ export default function App({ engine = sharedAudioEngine }: AppProps) {
 
       {setupComplete && !calibrationComplete ? (
         <CalibrationModal
+          busy={calibrationBusy}
           previewBaseToneHz={previewBaseToneHz}
           onPreview={previewCalibration}
           onChoose={(carrierHz) => completeCalibration(carrierHz, false)}

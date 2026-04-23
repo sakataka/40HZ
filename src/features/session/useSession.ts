@@ -23,6 +23,8 @@ import {
 
 const TICK_MS = 250;
 
+type AudioOperation = 'idle' | 'starting' | 'stopping' | 'previewing' | 'calibrating';
+
 export function useSession(engine: AudioEngine) {
   const [initialPreferences] = useState(() =>
     hydrateStoredPreferences(loadStoredPreferences()),
@@ -44,13 +46,14 @@ export function useSession(engine: AudioEngine) {
     acceptedSafetyNotice: initialPreferences.acceptedSafetyNotice,
   }));
   const [previewBaseToneHz, setPreviewBaseToneHz] = useState<number | null>(null);
+  const [audioOperation, setAudioOperation] = useState<AudioOperation>('idle');
 
   const settingsRef = useRef(settings);
   const sessionStateRef = useRef(sessionState);
   const userContextRef = useRef(userContext);
   const calibrationRef = useRef(calibration);
   const previewBaseToneHzRef = useRef(previewBaseToneHz);
-  const transitionStateRef = useRef<'idle' | 'starting' | 'stopping'>('idle');
+  const audioOperationRef = useRef<AudioOperation>('idle');
 
   useEffect(() => {
     settingsRef.current = settings;
@@ -152,25 +155,26 @@ export function useSession(engine: AudioEngine) {
   const calibrationComplete = calibration.completedAt != null;
   const activeProfile = getRecommendationProfile(settings.profileId);
   const activeBaseToneHz = settings.carrierHz;
+  const calibrationBusy = audioOperation === 'previewing' || audioOperation === 'calibrating';
 
   async function startSession(): Promise<boolean> {
     const current = sessionStateRef.current;
-    if (transitionStateRef.current !== 'idle' || current.status !== 'idle') {
+    if (current.status !== 'idle' || !beginAudioOperation('starting')) {
       return false;
     }
 
     if (!setupComplete || !calibrationComplete) {
+      endAudioOperation();
       return false;
     }
 
-    transitionStateRef.current = 'starting';
     setSessionState((previous) => ({
       ...previous,
       status: 'starting',
     }));
 
     try {
-      await stopPreviewIfNeeded();
+      await stopPreviewAudio();
 
       const activeSettings = settingsRef.current;
       await engine.start(activeSettings);
@@ -197,17 +201,16 @@ export function useSession(engine: AudioEngine) {
 
       return false;
     } finally {
-      transitionStateRef.current = 'idle';
+      endAudioOperation();
     }
   }
 
   async function stopSession(reason: StopReason = 'manual'): Promise<void> {
     const current = sessionStateRef.current;
-    if (transitionStateRef.current !== 'idle' || current.status !== 'running') {
+    if (current.status !== 'running' || !beginAudioOperation('stopping')) {
       return;
     }
 
-    transitionStateRef.current = 'stopping';
     setSessionState((previous) => ({
       ...previous,
       status: 'stopping',
@@ -226,7 +229,7 @@ export function useSession(engine: AudioEngine) {
         endsAt: null,
         remainingMs: refreshedSettings.durationMinutes * 60_000,
       }));
-      transitionStateRef.current = 'idle';
+      endAudioOperation();
     }
   }
 
@@ -254,44 +257,88 @@ export function useSession(engine: AudioEngine) {
   }
 
   async function previewCalibration(carrierHz: number): Promise<void> {
-    if (transitionStateRef.current !== 'idle' || sessionStateRef.current.status !== 'idle') {
+    if (sessionStateRef.current.status !== 'idle' || !beginAudioOperation('previewing')) {
       return;
     }
 
-    const previewSettings = deriveCalibrationPreviewSettings(userContextRef.current, carrierHz);
-    await engine.start(previewSettings);
-    setPreviewBaseToneHz(carrierHz);
+    try {
+      await stopPreviewAudio();
+
+      const previewSettings = deriveCalibrationPreviewSettings(userContextRef.current, carrierHz);
+      await engine.start(previewSettings);
+      setPreviewBaseToneHz(carrierHz);
+    } catch {
+      setPreviewBaseToneHz(null);
+    } finally {
+      endAudioOperation();
+    }
   }
 
   async function completeCalibration(carrierHz: number, skipped: boolean): Promise<void> {
-    await stopPreviewIfNeeded();
+    if (!beginAudioOperation('calibrating')) {
+      return;
+    }
 
-    const nextCalibration: CalibrationResult = {
-      preferredBaseToneHz: carrierHz,
-      completedAt: Date.now(),
-      skipped,
-    };
+    try {
+      await stopPreviewAudio();
 
-    setCalibration(nextCalibration);
-    setSettings((current) => mergeSessionSettings(current, { carrierHz }));
+      const nextCalibration: CalibrationResult = {
+        preferredBaseToneHz: carrierHz,
+        completedAt: Date.now(),
+        skipped,
+      };
+
+      setCalibration(nextCalibration);
+      setSettings((current) => mergeSessionSettings(current, { carrierHz }));
+    } finally {
+      endAudioOperation();
+    }
   }
 
   async function resetCalibration(): Promise<void> {
-    await stopPreviewIfNeeded();
-    setCalibration((current) => ({
-      ...current,
-      completedAt: null,
-      skipped: false,
-    }));
+    if (!beginAudioOperation('calibrating')) {
+      return;
+    }
+
+    try {
+      await stopPreviewAudio();
+      setCalibration((current) => ({
+        ...current,
+        completedAt: null,
+        skipped: false,
+      }));
+    } finally {
+      endAudioOperation();
+    }
   }
 
-  async function stopPreviewIfNeeded(): Promise<void> {
+  async function stopPreviewAudio(): Promise<void> {
     if (previewBaseToneHzRef.current == null) {
       return;
     }
 
-    await engine.stop('manual');
-    setPreviewBaseToneHz(null);
+    try {
+      await engine.stop('manual');
+    } catch {
+      // Keep calibration controls recoverable if the browser audio stack rejects a stop call.
+    } finally {
+      setPreviewBaseToneHz(null);
+    }
+  }
+
+  function beginAudioOperation(operation: Exclude<AudioOperation, 'idle'>): boolean {
+    if (audioOperationRef.current !== 'idle') {
+      return false;
+    }
+
+    audioOperationRef.current = operation;
+    setAudioOperation(operation);
+    return true;
+  }
+
+  function endAudioOperation(): void {
+    audioOperationRef.current = 'idle';
+    setAudioOperation('idle');
   }
 
   return {
@@ -300,6 +347,7 @@ export function useSession(engine: AudioEngine) {
     calibrationComplete,
     completeCalibration,
     completeOnboarding,
+    calibrationBusy,
     previewCalibration,
     previewBaseToneHz,
     resetCalibration,

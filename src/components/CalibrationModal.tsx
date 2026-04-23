@@ -1,4 +1,5 @@
 type CalibrationModalProps = {
+  busy: boolean;
   previewBaseToneHz: number | null;
   onPreview: (carrierHz: number) => Promise<void>;
   onChoose: (carrierHz: number) => Promise<void>;
@@ -6,6 +7,7 @@ type CalibrationModalProps = {
 };
 
 export function CalibrationModal({
+  busy,
   previewBaseToneHz,
   onPreview,
   onChoose,
@@ -26,10 +28,20 @@ export function CalibrationModal({
               <strong>{carrierHz}Hz</strong>
               <p>{carrierHz === 220 ? 'Lower and softer' : 'Brighter and more defined'}</p>
               <div className="button-row">
-                <button className="ghost-button" type="button" onClick={() => void onPreview(carrierHz)}>
+                <button
+                  className="ghost-button"
+                  type="button"
+                  onClick={() => void onPreview(carrierHz)}
+                  disabled={busy}
+                >
                   {previewBaseToneHz === carrierHz ? 'Previewing' : 'Preview'}
                 </button>
-                <button className="primary-button" type="button" onClick={() => void onChoose(carrierHz)}>
+                <button
+                  className="primary-button"
+                  type="button"
+                  onClick={() => void onChoose(carrierHz)}
+                  disabled={busy}
+                >
                   Use this tone
                 </button>
               </div>
@@ -37,7 +49,7 @@ export function CalibrationModal({
           ))}
         </div>
 
-        <button className="inline-toggle" type="button" onClick={() => void onSkip()}>
+        <button className="inline-toggle" type="button" onClick={() => void onSkip()} disabled={busy}>
           Skip and use 220 Hz
         </button>
       </div>

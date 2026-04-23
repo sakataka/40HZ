@@ -74,6 +74,31 @@ describe('App', () => {
     );
   });
 
+  it('keeps session start disabled until calibration is complete', async () => {
+    const engine = createMockEngine();
+    render(<App engine={engine} />);
+
+    expect(screen.getByRole('button', { name: 'Start session' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Use these settings' }));
+
+    expect(screen.getByRole('button', { name: 'Start session' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Skip and use 220 Hz' }));
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Start session' })).toBeEnabled());
+  });
+
+  it('keeps session start disabled while tone check is being rerun', async () => {
+    const engine = createMockEngine();
+    render(<App engine={engine} />);
+    await finishSetup();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show advanced settings' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Run tone check again' }));
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Compare 220 Hz and 440 Hz' })).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Start session' })).toBeDisabled();
+  });
+
   it('uses more conservative defaults for sound-sensitive users', async () => {
     const engine = createMockEngine();
     render(<App engine={engine} />);
@@ -265,6 +290,120 @@ describe('App', () => {
 
     expect(screen.getAllByText('440Hz').length).toBeGreaterThan(0);
     await waitFor(() => expect(screen.getByLabelText('Base tone (advanced)')).toHaveValue('440'));
+  });
+
+  it('only starts one calibration preview while a preview transition is in flight', async () => {
+    const deferredPreview = createDeferred<void>();
+    const engine = createMockEngine({
+      start: vi.fn().mockReturnValue(deferredPreview.promise),
+    });
+
+    render(<App engine={engine} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Use these settings' }));
+
+    const previewButtons = screen.getAllByRole('button', { name: 'Preview' });
+    fireEvent.click(previewButtons[0]);
+    fireEvent.click(previewButtons[1]);
+
+    await waitFor(() => expect(engine.start).toHaveBeenCalledTimes(1));
+    expect(previewButtons[0]).toBeDisabled();
+    expect(previewButtons[1]).toBeDisabled();
+    expect(screen.getAllByRole('button', { name: 'Use this tone' })[0]).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Skip and use 220 Hz' })).toBeDisabled();
+
+    await act(async () => {
+      deferredPreview.resolve();
+      await deferredPreview.promise;
+    });
+
+    expect(screen.getByRole('button', { name: 'Previewing' })).toBeEnabled();
+    expect(screen.getAllByRole('button', { name: 'Preview' })[0]).toBeEnabled();
+  });
+
+  it('stops the active preview before switching to another preview tone', async () => {
+    const engine = createMockEngine();
+    render(<App engine={engine} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Use these settings' }));
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Preview' })[0]);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Previewing' })).toBeInTheDocument());
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Preview' })[0]);
+
+    await waitFor(() => expect(engine.stop).toHaveBeenCalledWith('manual'));
+    expect(engine.start).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole('button', { name: 'Previewing' })).toBeInTheDocument();
+  });
+
+  it('disables calibration actions while choosing a previewed tone', async () => {
+    const deferredStop = createDeferred<void>();
+    const engine = createMockEngine({
+      stop: vi.fn().mockReturnValue(deferredStop.promise),
+    });
+
+    render(<App engine={engine} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Use these settings' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Preview' })[0]);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Previewing' })).toBeInTheDocument());
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Use this tone' })[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip and use 220 Hz' }));
+
+    expect(engine.stop).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Previewing' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Skip and use 220 Hz' })).toBeDisabled();
+
+    await act(async () => {
+      deferredStop.resolve();
+      await deferredStop.promise;
+    });
+
+    await waitFor(() =>
+      expect(getStoredPreferences().calibration).toEqual(
+        expect.objectContaining({
+          preferredBaseToneHz: 220,
+          skipped: false,
+        }),
+      ),
+    );
+  });
+
+  it('recovers the calibration modal when preview start fails', async () => {
+    const engine = createMockEngine({
+      start: vi.fn().mockRejectedValue(new Error('Audio denied')),
+    });
+
+    render(<App engine={engine} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Use these settings' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Preview' })[0]);
+
+    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Preview' })[0]).toBeEnabled());
+    expect(screen.queryByRole('button', { name: 'Previewing' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Skip and use 220 Hz' })).toBeEnabled();
+  });
+
+  it('does not let calibration preview interrupt a pending session start', async () => {
+    const deferredStart = createDeferred<void>();
+    const engine = createMockEngine({
+      start: vi.fn().mockReturnValue(deferredStart.promise),
+    });
+
+    render(<App engine={engine} />);
+    await finishSetup();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show advanced settings' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start session' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Run tone check again' }));
+
+    await waitFor(() => expect(engine.start).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole('heading', { name: 'Compare 220 Hz and 440 Hz' })).not.toBeInTheDocument();
+
+    await act(async () => {
+      deferredStart.resolve();
+      await deferredStart.promise;
+    });
+
+    expect(screen.getByText('Playing')).toBeInTheDocument();
   });
 
   it('hydrates persisted settings into a consistent state', async () => {
