@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  hydrateStoredPreferences,
   STORAGE_KEY,
   loadStoredPreferences,
   saveStoredPreferences,
@@ -40,5 +41,44 @@ describe('session storage', () => {
 
     expect(window.localStorage.getItem(STORAGE_KEY)).toBeTruthy();
     expect(loadStoredPreferences()).toEqual(preferences);
+  });
+
+  it('hydrates stored preferences into normalized runtime values', () => {
+    const hydrated = hydrateStoredPreferences({
+      settings: {
+        pulseHz: 40 as const,
+        carrierHz: 1000,
+        masterVolume: 0.01,
+        durationMinutes: 20,
+        fadeInSec: 0.5,
+        fadeOutSec: 12,
+        backgroundNoiseLevel: -1,
+        profileId: 'recommended',
+        modulationStyle: 'sine' as const,
+      },
+      acceptedSafetyNotice: true,
+      userContext: {
+        soundSensitivity: 'sensitive' as const,
+        outputMode: 'speaker' as const,
+        completedAt: null,
+      },
+      calibration: {
+        preferredBaseToneHz: 10,
+        completedAt: null,
+        skipped: false,
+      },
+    });
+
+    expect(hydrated.settings).toEqual(
+      expect.objectContaining({
+        carrierHz: 520,
+        masterVolume: 0.05,
+        fadeInSec: 1,
+        fadeOutSec: 10,
+        backgroundNoiseLevel: 0,
+        profileId: 'recommended',
+      }),
+    );
+    expect(hydrated.calibration.preferredBaseToneHz).toBe(180);
   });
 });

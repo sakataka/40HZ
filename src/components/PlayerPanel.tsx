@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import type {
-  CalibrationResult,
   RecommendationProfile,
   SessionSettings,
   SessionState,
@@ -11,10 +10,10 @@ import { formatCountdown, formatOutputMode, formatPercent, formatSensitivity } f
 type PlayerPanelProps = {
   profiles: RecommendationProfile[];
   activeProfile: RecommendationProfile;
+  activeBaseToneHz: number;
   settings: SessionSettings;
   sessionState: SessionState;
   userContext: UserContext;
-  calibration: CalibrationResult;
   onApplyProfile: (profileId: string) => void;
   onStart: () => Promise<boolean>;
   onStop: () => Promise<void>;
@@ -25,10 +24,10 @@ type PlayerPanelProps = {
 export function PlayerPanel({
   profiles,
   activeProfile,
+  activeBaseToneHz,
   settings,
   sessionState,
   userContext,
-  calibration,
   onApplyProfile,
   onStart,
   onStop,
@@ -37,9 +36,18 @@ export function PlayerPanel({
 }: PlayerPanelProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showExploratory, setShowExploratory] = useState(false);
-  const running = sessionState.status === 'running';
+  const canStart = sessionState.status === 'idle';
+  const canStop = sessionState.status === 'running';
   const limitedProfiles = profiles.filter((profile) => profile.evidenceLevel === 'limited');
   const experimentalProfiles = profiles.filter((profile) => profile.evidenceLevel === 'experimental');
+  const statusLabel =
+    sessionState.status === 'starting'
+      ? 'Starting'
+      : sessionState.status === 'running'
+        ? 'Playing'
+        : sessionState.status === 'stopping'
+          ? 'Stopping'
+          : 'Ready';
 
   return (
     <section className="panel">
@@ -48,9 +56,7 @@ export function PlayerPanel({
           <p className="section-label">Recommended Controls</p>
           <h2>Simple playback controls</h2>
         </div>
-        <div className={`status-pill status-${sessionState.status}`}>
-          {running ? 'Playing' : sessionState.status === 'stopping' ? 'Stopping' : 'Ready'}
-        </div>
+        <div className={`status-pill status-${sessionState.status}`}>{statusLabel}</div>
       </div>
 
       <div className="preset-grid">
@@ -108,7 +114,7 @@ export function PlayerPanel({
         </div>
         <div>
           <span>Base tone</span>
-          <strong>{calibration.preferredBaseToneHz}Hz</strong>
+          <strong>{activeBaseToneHz}Hz</strong>
         </div>
       </div>
 
@@ -118,10 +124,10 @@ export function PlayerPanel({
           <strong>{formatCountdown(sessionState.remainingMs)}</strong>
         </div>
         <div className="button-row">
-          <button className="primary-button" type="button" onClick={() => void onStart()} disabled={running}>
+          <button className="primary-button" type="button" onClick={() => void onStart()} disabled={!canStart}>
             Start session
           </button>
-          <button className="ghost-button" type="button" onClick={() => void onStop()} disabled={!running}>
+          <button className="ghost-button" type="button" onClick={() => void onStop()} disabled={!canStop}>
             Stop
           </button>
         </div>

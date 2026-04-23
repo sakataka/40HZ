@@ -19,19 +19,18 @@ export const DEFAULT_CALIBRATION: CalibrationResult = {
   skipped: false,
 };
 
+export const BASE_TONE_LIMITS = {
+  min: 180,
+  max: 520,
+} as const;
+
 const LIMITS = {
-  carrierHz: { min: 180, max: 520 },
+  carrierHz: BASE_TONE_LIMITS,
   masterVolume: { min: 0.05, max: 0.9 },
   durationMinutes: { min: 1, max: 60 },
   fadeSec: { min: 1, max: 10 },
   backgroundNoiseLevel: { min: 0, max: 0.3 },
 } as const;
-
-export const DEFAULT_SETTINGS: SessionSettings = deriveSessionSettings(
-  'recommended',
-  DEFAULT_USER_CONTEXT,
-  DEFAULT_CALIBRATION,
-);
 
 export function deriveSessionSettings(
   profileId: string,
@@ -44,7 +43,7 @@ export function deriveSessionSettings(
 
   return validateSessionSettings({
     pulseHz: 40,
-    carrierHz: calibration.preferredBaseToneHz || 220,
+    carrierHz: normalizeBaseToneHz(calibration.preferredBaseToneHz),
     masterVolume: getStartingVolume(profile.id, sensitivity, outputMode),
     durationMinutes: profile.durationMinutes,
     fadeInSec: getFadeSeconds(profile.id, sensitivity),
@@ -74,7 +73,7 @@ export function deriveCalibrationPreviewSettings(
 export function validateSessionSettings(input: SessionSettings): SessionSettings {
   return {
     pulseHz: 40,
-    carrierHz: clamp(input.carrierHz, LIMITS.carrierHz.min, LIMITS.carrierHz.max),
+    carrierHz: normalizeBaseToneHz(input.carrierHz),
     masterVolume: round(clamp(input.masterVolume, LIMITS.masterVolume.min, LIMITS.masterVolume.max)),
     durationMinutes: Math.round(
       clamp(input.durationMinutes, LIMITS.durationMinutes.min, LIMITS.durationMinutes.max),
@@ -98,6 +97,12 @@ export function mergeSessionSettings(
     ...updates,
     pulseHz: 40,
   });
+}
+
+export function normalizeBaseToneHz(value: number | null | undefined): number {
+  return Math.round(
+    clamp(value ?? DEFAULT_CALIBRATION.preferredBaseToneHz, BASE_TONE_LIMITS.min, BASE_TONE_LIMITS.max),
+  );
 }
 
 function getStartingVolume(

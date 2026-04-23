@@ -1,7 +1,7 @@
 class IsochronicProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
-      { name: 'carrierHz', defaultValue: 160, minValue: 80, maxValue: 300 },
+      { name: 'carrierHz', defaultValue: 220, minValue: 180, maxValue: 520 },
       { name: 'pulseHz', defaultValue: 40, minValue: 40, maxValue: 40 },
       { name: 'modulationMode', defaultValue: 0, minValue: 0, maxValue: 1 },
       { name: 'noiseLevel', defaultValue: 0.08, minValue: 0, maxValue: 0.4 },

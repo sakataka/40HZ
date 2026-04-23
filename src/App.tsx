@@ -14,7 +14,7 @@ type AppProps = {
 export default function App({ engine = sharedAudioEngine }: AppProps) {
   const {
     activeProfile,
-    calibration,
+    activeBaseToneHz,
     calibrationComplete,
     completeCalibration,
     completeOnboarding,
@@ -66,7 +66,7 @@ export default function App({ engine = sharedAudioEngine }: AppProps) {
       <PlayerPanel
         profiles={RECOMMENDATION_PROFILES}
         activeProfile={activeProfile}
-        calibration={calibration}
+        activeBaseToneHz={activeBaseToneHz}
         sessionState={sessionState}
         settings={settings}
         userContext={userContext}
