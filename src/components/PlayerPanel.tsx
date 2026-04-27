@@ -55,8 +55,8 @@ export function PlayerPanel({
     <section className="panel">
       <div className="panel-header">
         <div>
-          <p className="section-label">Recommended Controls</p>
-          <h2>Simple playback controls</h2>
+          <p className="section-label">Controlled Session Console</p>
+          <h2>Managed playback controls</h2>
         </div>
         <div className={`status-pill status-${sessionState.status}`}>{statusLabel}</div>
       </div>
@@ -149,11 +149,11 @@ export function PlayerPanel({
       </div>
 
       <div className="guide-card">
-        <p className="section-label">Best Practices</p>
+        <p className="section-label">Operator Notes</p>
         <ul className="guide-list">
-          <li>Start in a quiet place and keep the first session short.</li>
+          <li>Run sessions only in a quiet, legal, and controlled setting.</li>
           <li>Some EEG studies observed stronger 40 Hz responses in eyes-closed or low-arousal conditions. If comfortable, you can try listening with your eyes closed.</li>
-          <li>Keep the volume no higher than clearly audible and comfortable.</li>
+          <li>Keep the volume no higher than clearly audible and comfortable; this is not a challenge or endurance test.</li>
         </ul>
       </div>
 
@@ -206,7 +206,7 @@ export function PlayerPanel({
           />
           <div className="advanced-actions">
             <p>
-              This app does not auto-adjust by age or sex. The tone check is a usability shortcut, not a research-based optimization step. You can run it again at any time.
+              This app does not auto-adjust by age or sex. The tone check is a usability shortcut for this device and listener, not a research-based optimization step. You can run it again at any time.
             </p>
             <button className="ghost-button" type="button" onClick={() => void onResetCalibration()}>
               Run tone check again

@@ -16,17 +16,17 @@ export function CalibrationModal({
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="calibration-title">
       <div className="modal-card">
-        <p className="section-label">Tone Check</p>
+        <p className="section-label">Controlled Tone Check</p>
         <h2 id="calibration-title">Compare 220 Hz and 440 Hz</h2>
         <p className="hero-copy">
-          This is a comfort and audibility check, not a research-based optimization step. Pick the tone that is easiest to hear without feeling harsh.
+          This is a comfort and audibility check for the current output device, not a research-based optimization step. Pick the tone that is easiest to hear without feeling harsh.
         </p>
 
         <div className="calibration-grid">
           {[220, 440].map((carrierHz) => (
             <div className="calibration-card" key={carrierHz}>
               <strong>{carrierHz}Hz</strong>
-              <p>{carrierHz === 220 ? 'Lower and softer' : 'Brighter and more defined'}</p>
+              <p>{carrierHz === 220 ? 'Lower, softer control tone' : 'Brighter, more defined control tone'}</p>
               <div className="button-row">
                 <button
                   className="ghost-button"

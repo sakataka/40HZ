@@ -8,7 +8,7 @@ type OnboardingModalProps = {
 
 const SAFETY_POINTS = [
   'This app is not a medical treatment and does not guarantee clinical benefit.',
-  'It is designed for general adult self-use.',
+  'It is designed for legal adult self-use in a controlled listening environment.',
   'Stop immediately if you feel discomfort, dizziness, or a headache.',
   'Keep the volume low and start with the minimum level that is clearly audible.',
 ];
@@ -22,10 +22,10 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="setup-title">
       <div className="modal-card">
-        <p className="section-label">Before You Start</p>
-        <h2 id="setup-title">Two quick questions</h2>
+        <p className="section-label">Controlled Setup</p>
+        <h2 id="setup-title">Two quick preflight questions</h2>
         <p className="hero-copy">
-          We only use your listening setup and sound sensitivity to choose conservative starting settings.
+          We only use your listening setup and sound sensitivity to choose conservative starting settings for this managed session.
         </p>
 
         <div className="modal-grid">

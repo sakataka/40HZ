@@ -4,7 +4,7 @@ export function EvidencePanel() {
       <div className="panel-header">
         <div>
           <p className="section-label">Evidence and Limits</p>
-          <h2>What this app is based on</h2>
+          <h2>Basis for this controlled protocol</h2>
         </div>
       </div>
 
@@ -13,7 +13,7 @@ export function EvidencePanel() {
           <small className="evidence-pill evidence-limited">Limited human data</small>
           <h3>Evidence for audio-only consumer use is limited</h3>
           <p>
-            The audio-only studies cited here are informative but limited in scope. This app uses conservative defaults rather than claiming validated treatment settings.
+            The audio-only studies cited here are informative but limited in scope. This app uses conservative, bounded defaults rather than claiming validated treatment settings.
           </p>
         </article>
 
@@ -29,7 +29,7 @@ export function EvidencePanel() {
           <small className="evidence-pill evidence-experimental">Experimental</small>
           <h3>No age- or sex-based tuning</h3>
           <p>
-            The literature on age, sex, and related response differences is too heterogeneous to support product-ready auto-tuning. This app uses a simple tone preference check instead.
+            The literature on age, sex, and related response differences is too heterogeneous to support product-ready auto-tuning. This app uses a simple device-and-listener tone check instead.
           </p>
         </article>
       </div>

@@ -35,12 +35,12 @@ export default function App({ engine = sharedAudioEngine }: AppProps) {
   return (
     <main className="app-shell">
       <section className="hero-card">
-        <p className="eyebrow">40 Hz Audio Sessions</p>
+        <p className="eyebrow">Controlled 40 Hz Listening Chamber</p>
         <div className="hero-grid">
           <div>
-            <h1>40 Hz stimulation, simplified.</h1>
+            <h1>Controlled 40 Hz playback.</h1>
             <p className="hero-copy">
-              This player uses conservative defaults informed by limited human EEG and acceptability findings, plus a short listening check.
+              A bounded session console for legal, self-administered listening tests using conservative defaults, limited human EEG findings, and a short audibility check.
             </p>
           </div>
           <div className="hero-metrics" aria-label="session summary">
