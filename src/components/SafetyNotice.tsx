@@ -3,26 +3,26 @@ type SafetyNoticeProps = {
 };
 
 const SAFETY_POINTS = [
-  'This app is not a medical treatment and does not guarantee clinical benefit.',
-  'Stop immediately if you feel discomfort, dizziness, or a headache.',
-  'Do not use it while driving, working, or in any situation where you need to stay alert to your surroundings.',
-  'Use it only in a legal, controlled setting; avoid high volume and start with short sessions.',
-  'If you have a history of seizures or other relevant medical conditions, talk to a clinician before using it.',
+  'このアプリは医療行為ではなく、臨床的な効果を保証しません。',
+  '不快感、めまい、頭痛があればすぐ停止してください。',
+  '運転中、作業中、周囲への注意が必要な状況では使わないでください。',
+  '静かな環境で、音量を上げすぎず、短いセッションから始めてください。',
+  '発作歴など気になる医療上の事情がある場合は、使用前に専門家へ相談してください。',
 ];
 
 export function SafetyNotice({ onAccept }: SafetyNoticeProps) {
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="safety-title">
       <div className="modal-card">
-        <p className="section-label">Safety Information</p>
-        <h2 id="safety-title">Please review the safety information before this controlled session</h2>
+        <p className="section-label">安全情報</p>
+        <h2 id="safety-title">始める前に安全上の注意を確認してください</h2>
         <ul className="safety-list">
           {SAFETY_POINTS.map((point) => (
             <li key={point}>{point}</li>
           ))}
         </ul>
         <button className="primary-button" type="button" onClick={onAccept}>
-          I understand, continue
+          理解して進む
         </button>
       </div>
     </div>

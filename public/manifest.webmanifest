@@ -1,14 +1,14 @@
 {
-  "name": "40 Hz Audio Sessions",
-  "short_name": "40 Hz Audio",
-  "description": "A browser app for 40 Hz isochronic audio sessions.",
-  "start_url": "/",
+  "name": "40 Hz セッション制御盤",
+  "short_name": "40 Hz 制御盤",
+  "description": "40 Hz のリスニングセッションを管理するブラウザアプリです。",
+  "start_url": "/40HZ/",
   "display": "standalone",
-  "background_color": "#08111d",
-  "theme_color": "#0d1b2a",
+  "background_color": "#080a09",
+  "theme_color": "#101513",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "/40HZ/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

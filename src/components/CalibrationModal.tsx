@@ -16,10 +16,10 @@ export function CalibrationModal({
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="calibration-title">
       <div className="modal-card">
-        <p className="section-label">Controlled Tone Check</p>
-        <h2 id="calibration-title">Compare 220 Hz and 440 Hz</h2>
+        <p className="section-label">トーン確認</p>
+        <h2 id="calibration-title">220 Hz と 440 Hz を比べる</h2>
         <p className="hero-copy">
-          This is a comfort and audibility check for the current output device, not a research-based optimization step. Pick the tone that is easiest to hear without feeling harsh.
+          今の出力環境で聞き取りやすい基準音を選ぶための確認です。研究にもとづく最適化ではありません。
         </p>
 
         <div className="calibration-grid">
@@ -27,7 +27,7 @@ export function CalibrationModal({
             <div className="calibration-card" key={carrierHz}>
               <div>
                 <strong>{carrierHz}Hz</strong>
-                <p>{carrierHz === 220 ? 'Lower, softer control tone' : 'Brighter, more defined control tone'}</p>
+                <p>{carrierHz === 220 ? '低めで柔らかい基準音' : '明るく輪郭が出やすい基準音'}</p>
               </div>
               <div className="button-row">
                 <button
@@ -36,7 +36,7 @@ export function CalibrationModal({
                   onClick={() => void onPreview(carrierHz)}
                   disabled={busy}
                 >
-                  {previewBaseToneHz === carrierHz ? 'Previewing' : 'Preview'}
+                  {previewBaseToneHz === carrierHz ? '試聴中' : '試聴'}
                 </button>
                 <button
                   className="primary-button"
@@ -44,7 +44,7 @@ export function CalibrationModal({
                   onClick={() => void onChoose(carrierHz)}
                   disabled={busy}
                 >
-                  Use this tone
+                  このトーンを使う
                 </button>
               </div>
             </div>
@@ -52,7 +52,7 @@ export function CalibrationModal({
         </div>
 
         <button className="inline-toggle" type="button" onClick={() => void onSkip()} disabled={busy}>
-          Skip and use 220 Hz
+          スキップして 220 Hz を使う
         </button>
       </div>
     </div>

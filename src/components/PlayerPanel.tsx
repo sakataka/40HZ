@@ -44,52 +44,72 @@ export function PlayerPanel({
   const experimentalProfiles = profiles.filter((profile) => profile.evidenceLevel === 'experimental');
   const statusLabel =
     sessionState.status === 'starting'
-      ? 'Starting'
+      ? '起動中'
       : sessionState.status === 'running'
-        ? 'Playing'
+        ? '再生中'
         : sessionState.status === 'stopping'
-          ? 'Stopping'
-          : 'Ready';
+          ? '停止中'
+          : '待機中';
 
   return (
     <section className="panel">
       <div className="panel-header">
         <div>
-          <p className="section-label">Controlled Session Console</p>
-          <h2>Managed playback controls</h2>
+          <p className="section-label">セッション制御</p>
+          <h2>再生と停止</h2>
         </div>
         <div className={`status-pill status-${sessionState.status}`}>{statusLabel}</div>
       </div>
 
-      <div className="console-grid">
-        <div className="console-column">
-          <div className="preset-grid">
-            {limitedProfiles.map((profile) => (
-              <button
-                key={profile.id}
-                className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
-                type="button"
-                onClick={() => onApplyProfile(profile.id)}
-              >
-                <div className="preset-head">
-                  <span>{profile.label}</span>
-                  <small className="evidence-pill evidence-limited">Limited human data</small>
-                </div>
-                <strong>{profile.summary}</strong>
-                <small>{profile.description}</small>
-              </button>
-            ))}
+      <div className="playback-console">
+        <div className="timer-strip">
+          <div>
+            <span>残り時間</span>
+            <strong>{formatCountdown(sessionState.remainingMs)}</strong>
           </div>
-
-          <div className="collapse-row">
-            <button className="inline-toggle" type="button" onClick={() => setShowExploratory((value) => !value)}>
-              {showExploratory ? 'Hide exploratory options' : 'Show exploratory options'}
+          <div className="button-row">
+            <button className="primary-button" type="button" onClick={() => void onStart()} disabled={!canStart}>
+              セッション開始
+            </button>
+            <button className="ghost-button stop-button" type="button" onClick={() => void onStop()} disabled={!canStop}>
+              停止
             </button>
           </div>
+        </div>
 
-          {showExploratory ? (
-            <div className="exploratory-card">
-              {experimentalProfiles.map((profile) => (
+        <div className="context-chip-row" aria-label="現在の設定">
+          <div className="duration-chip">
+            <span>モード</span>
+            <strong>{activeProfile.label}</strong>
+          </div>
+          <div className="duration-chip">
+            <span>出力</span>
+            <strong>{formatOutputMode(userContext.outputMode)}</strong>
+          </div>
+          <div className="duration-chip">
+            <span>感度</span>
+            <strong>{formatSensitivity(userContext.soundSensitivity)}</strong>
+          </div>
+          <div className="duration-chip">
+            <span>基準音</span>
+            <strong>{activeBaseToneHz}Hz</strong>
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-section">
+        <div className="section-head">
+          <div>
+            <p className="section-label">設定</p>
+            <h3>再生中でも調整できます</h3>
+          </div>
+          <p>不快感、めまい、頭痛があればすぐ停止してください。</p>
+        </div>
+
+        <div className="settings-grid">
+          <div className="settings-column">
+            <div className="preset-grid">
+              {limitedProfiles.map((profile) => (
                 <button
                   key={profile.id}
                   className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
@@ -98,127 +118,120 @@ export function PlayerPanel({
                 >
                   <div className="preset-head">
                     <span>{profile.label}</span>
-                    <small className="evidence-pill evidence-experimental">Experimental</small>
+                    <small className="evidence-pill evidence-limited">限定的な人でのデータ</small>
                   </div>
                   <strong>{profile.summary}</strong>
                   <small>{profile.description}</small>
                 </button>
               ))}
             </div>
-          ) : null}
 
-          <div className="guide-card">
-            <p className="section-label">Operator Notes</p>
-            <p className="hero-copy">
-              Use a quiet, legal setting. Keep volume only clearly audible and comfortable; eyes-closed listening is optional if it feels comfortable.
-            </p>
-          </div>
-        </div>
-
-        <div className="console-column">
-          <div className="context-chip-row" aria-label="Listening context">
-            <div className="duration-chip">
-              <span>Output</span>
-              <strong>{formatOutputMode(userContext.outputMode)}</strong>
-            </div>
-            <div className="duration-chip">
-              <span>Sensitivity</span>
-              <strong>{formatSensitivity(userContext.soundSensitivity)}</strong>
-            </div>
-            <div className="duration-chip">
-              <span>Base</span>
-              <strong>{activeBaseToneHz}Hz</strong>
-            </div>
-          </div>
-
-          <div className="timer-strip">
-            <div>
-              <span>Time left</span>
-              <strong>{formatCountdown(sessionState.remainingMs)}</strong>
-            </div>
-            <div className="button-row">
-              <button className="primary-button" type="button" onClick={() => void onStart()} disabled={!canStart}>
-                Start session
-              </button>
-              <button className="ghost-button stop-button" type="button" onClick={() => void onStop()} disabled={!canStop}>
-                Stop
+            <div className="collapse-row">
+              <button className="inline-toggle" type="button" onClick={() => setShowExploratory((value) => !value)}>
+                {showExploratory ? '試験的な設定を隠す' : '試験的な設定を表示'}
               </button>
             </div>
-          </div>
 
-          <div className="duration-row" role="group" aria-label="Session length">
-            {[10, 20, 30].map((minutes) => (
-              <button
-                key={minutes}
-                className={`duration-chip ${settings.durationMinutes === minutes ? 'duration-active' : ''}`}
-                type="button"
-                onClick={() => onUpdateSettings({ durationMinutes: minutes })}
-              >
-                {minutes} min
-              </button>
-            ))}
-          </div>
-
-          <div className="control-grid">
-            <RangeControl
-              label="Volume"
-              value={settings.masterVolume}
-              min={0.05}
-              max={0.9}
-              step={0.01}
-              displayValue={formatPercent(settings.masterVolume)}
-              onChange={(value) => onUpdateSettings({ masterVolume: value })}
-            />
-          </div>
-
-          <div className="collapse-row">
-            <button className="inline-toggle" type="button" onClick={() => setShowAdvanced((value) => !value)}>
-              {showAdvanced ? 'Hide advanced settings' : 'Show advanced settings'}
-            </button>
-          </div>
-
-          {showAdvanced ? (
-            <div className="advanced-card">
-              <div className="advanced-control-grid">
-                <RangeControl
-                  label="Base tone (advanced)"
-                  value={settings.carrierHz}
-                  min={180}
-                  max={520}
-                  step={10}
-                  displayValue={`${settings.carrierHz}Hz`}
-                  onChange={(value) => onUpdateSettings({ carrierHz: value })}
-                />
-                <RangeControl
-                  label="Fade"
-                  value={settings.fadeInSec}
-                  min={1}
-                  max={10}
-                  step={0.5}
-                  displayValue={`${settings.fadeInSec.toFixed(1)} s`}
-                  onChange={(value) => onUpdateSettings({ fadeInSec: value, fadeOutSec: value })}
-                />
-                <RangeControl
-                  label="Background noise"
-                  value={settings.backgroundNoiseLevel}
-                  min={0}
-                  max={0.3}
-                  step={0.01}
-                  displayValue={formatPercent(settings.backgroundNoiseLevel)}
-                  onChange={(value) => onUpdateSettings({ backgroundNoiseLevel: value })}
-                />
+            {showExploratory ? (
+              <div className="exploratory-card">
+                {experimentalProfiles.map((profile) => (
+                  <button
+                    key={profile.id}
+                    className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
+                    type="button"
+                    onClick={() => onApplyProfile(profile.id)}
+                  >
+                    <div className="preset-head">
+                      <span>{profile.label}</span>
+                      <small className="evidence-pill evidence-experimental">試験的</small>
+                    </div>
+                    <strong>{profile.summary}</strong>
+                    <small>{profile.description}</small>
+                  </button>
+                ))}
               </div>
+            ) : null}
+          </div>
 
-              <div className="advanced-actions">
-                <p>
-                  This app does not auto-adjust by age or sex. The tone check is a usability shortcut for this device and listener, not a research-based optimization step. You can run it again at any time.
-                </p>
-                <button className="ghost-button" type="button" onClick={() => void onResetCalibration()}>
-                  Run tone check again
+          <div className="settings-column">
+            <div className="duration-row" role="group" aria-label="セッションの長さ">
+              {[10, 20, 30].map((minutes) => (
+                <button
+                  key={minutes}
+                  className={`duration-chip ${settings.durationMinutes === minutes ? 'duration-active' : ''}`}
+                  type="button"
+                  onClick={() => onUpdateSettings({ durationMinutes: minutes })}
+                >
+                  {minutes}分
                 </button>
-              </div>
+              ))}
             </div>
-          ) : null}
+
+            <div className="control-grid">
+              <RangeControl
+                label="音量"
+                value={settings.masterVolume}
+                min={0.05}
+                max={0.9}
+                step={0.01}
+                displayValue={formatPercent(settings.masterVolume)}
+                onChange={(value) => onUpdateSettings({ masterVolume: value })}
+              />
+            </div>
+
+            <div className="collapse-row">
+              <button
+                className="inline-toggle"
+                type="button"
+                onClick={() => setShowAdvanced((value) => !value)}
+              >
+                {showAdvanced ? '詳細設定を隠す' : '詳細設定を表示'}
+              </button>
+            </div>
+
+            {showAdvanced ? (
+              <div className="advanced-card">
+                <div className="advanced-control-grid">
+                  <RangeControl
+                    label="基準音（詳細）"
+                    value={settings.carrierHz}
+                    min={180}
+                    max={520}
+                    step={10}
+                    displayValue={`${settings.carrierHz}Hz`}
+                    onChange={(value) => onUpdateSettings({ carrierHz: value })}
+                  />
+                  <RangeControl
+                    label="フェード"
+                    value={settings.fadeInSec}
+                    min={1}
+                    max={10}
+                    step={0.5}
+                    displayValue={`${settings.fadeInSec.toFixed(1)}秒`}
+                    onChange={(value) => onUpdateSettings({ fadeInSec: value, fadeOutSec: value })}
+                  />
+                  <RangeControl
+                    label="背景ノイズ"
+                    value={settings.backgroundNoiseLevel}
+                    min={0}
+                    max={0.3}
+                    step={0.01}
+                    displayValue={formatPercent(settings.backgroundNoiseLevel)}
+                    onChange={(value) => onUpdateSettings({ backgroundNoiseLevel: value })}
+                  />
+                </div>
+
+                <div className="advanced-actions">
+                  <p>
+                    年齢や性別による自動調整は行いません。トーンチェックは、この機器と聞こえ方に合わせるための簡易確認です。
+                  </p>
+                  <button className="ghost-button" type="button" onClick={() => void onResetCalibration()}>
+                    トーンチェックをやり直す
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
     </section>

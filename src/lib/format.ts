@@ -10,13 +10,13 @@ export function formatPercent(value: number): string {
 }
 
 export function formatDurationLabel(minutes: number): string {
-  return `${minutes} min`;
+  return `${minutes}分`;
 }
 
 export function formatOutputMode(value: 'headphones' | 'speaker'): string {
-  return value === 'headphones' ? 'Headphones' : 'Speakers';
+  return value === 'headphones' ? 'ヘッドホン' : 'スピーカー';
 }
 
 export function formatSensitivity(value: 'standard' | 'sensitive'): string {
-  return value === 'sensitive' ? 'Sensitive' : 'Standard';
+  return value === 'sensitive' ? '音に敏感' : '標準';
 }

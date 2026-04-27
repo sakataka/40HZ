@@ -7,10 +7,10 @@ type OnboardingModalProps = {
 };
 
 const SAFETY_POINTS = [
-  'This app is not a medical treatment and does not guarantee clinical benefit.',
-  'It is designed for legal adult self-use in a controlled listening environment.',
-  'Stop immediately if you feel discomfort, dizziness, or a headache.',
-  'Keep the volume low and start with the minimum level that is clearly audible.',
+  'このアプリは医療行為ではなく、臨床的な効果を保証しません。',
+  '成人が静かな環境で自分用に使うことを前提にしています。',
+  '不快感、めまい、頭痛があればすぐ停止してください。',
+  '音量は低く、はっきり聞こえる最小限から始めてください。',
 ];
 
 export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalProps) {
@@ -22,11 +22,11 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="setup-title">
       <div className="modal-card">
-        <p className="section-label">Controlled Setup</p>
-        <h2 id="setup-title">Two quick preflight questions</h2>
+        <p className="section-label">初期設定</p>
+        <h2 id="setup-title">最初に2つだけ確認します</h2>
         <div className="modal-grid">
           <fieldset className="option-group">
-            <legend>Sound sensitivity</legend>
+            <legend>音への敏感さ</legend>
             <label>
               <input
                 checked={soundSensitivity === 'standard'}
@@ -34,7 +34,7 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
                 type="radio"
                 onChange={() => setSoundSensitivity('standard')}
               />
-              Standard
+              標準
             </label>
             <label>
               <input
@@ -43,12 +43,12 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
                 type="radio"
                 onChange={() => setSoundSensitivity('sensitive')}
               />
-              Sensitive
+              音に敏感
             </label>
           </fieldset>
 
           <fieldset className="option-group">
-            <legend>Listening setup</legend>
+            <legend>聞く環境</legend>
             <label>
               <input
                 checked={outputMode === 'headphones'}
@@ -56,7 +56,7 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
                 type="radio"
                 onChange={() => setOutputMode('headphones')}
               />
-              Headphones
+              ヘッドホン
             </label>
             <label>
               <input
@@ -65,25 +65,25 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
                 type="radio"
                 onChange={() => setOutputMode('speaker')}
               />
-              Speakers
+              スピーカー
             </label>
           </fieldset>
         </div>
 
-        <ul className="safety-list" aria-label="Safety notes">
+        <ul className="safety-list" aria-label="安全上の注意">
           {SAFETY_POINTS.map((point) => (
             <li key={point}>{point}</li>
           ))}
         </ul>
 
         <div className="modal-footer">
-          <p className="hero-copy">Used only to choose conservative starting settings.</p>
+          <p className="hero-copy">ここでの回答は、控えめな初期値を選ぶためだけに使います。</p>
           <button
             className="primary-button"
             type="button"
             onClick={() => onComplete({ soundSensitivity, outputMode })}
           >
-            Use these settings
+            この設定で進む
           </button>
         </div>
       </div>

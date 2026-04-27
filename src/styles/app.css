@@ -1,6 +1,6 @@
 :root {
   color-scheme: dark;
-  font-family: "Avenir Next", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Avenir Next", system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   --ink-950: #080a09;
@@ -155,9 +155,10 @@ a {
 
 .hero-card h1,
 .panel h2,
-.modal-card h2 {
+.modal-card h2,
+.section-head h3 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", serif;
   font-weight: 700;
 }
 
@@ -175,6 +176,7 @@ a {
 .control-grid,
 .advanced-control-grid,
 .console-grid,
+.settings-grid,
 .preset-grid,
 .evidence-grid,
 .modal-grid,
@@ -275,12 +277,36 @@ a {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.console-grid {
-  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+.playback-console {
+  display: grid;
+  gap: 12px;
+}
+
+.settings-section {
+  margin-top: 14px;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.section-head p {
+  margin: 0;
+  max-width: 28rem;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.settings-grid {
+  grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
   align-items: start;
 }
 
-.console-column {
+.settings-column {
   display: grid;
   gap: 11px;
 }
@@ -392,11 +418,16 @@ a {
 }
 
 .timer-strip {
-  padding: 14px 16px;
+  padding: 16px 18px;
+  border-color: rgba(215, 165, 74, 0.36);
+  background:
+    linear-gradient(135deg, rgba(183, 47, 53, 0.14), rgba(95, 163, 125, 0.08)),
+    rgba(13, 17, 16, 0.9);
 }
 
 .timer-strip strong {
-  font-size: 2.08rem;
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  line-height: 0.9;
 }
 
 .button-row {
@@ -415,6 +446,13 @@ a {
     0 0 0 1px rgba(183, 47, 53, 0.16);
 }
 
+.timer-strip .primary-button,
+.timer-strip .stop-button {
+  min-width: 9.5rem;
+  min-height: 3.15rem;
+  font-size: 1.04rem;
+}
+
 .primary-button:disabled,
 .ghost-button:disabled,
 .inline-toggle:disabled {
@@ -431,7 +469,7 @@ a {
 }
 
 .context-chip-row {
-  margin-top: 0;
+  margin: 0;
 }
 
 .duration-chip span {
@@ -601,6 +639,7 @@ a {
 @media (max-width: 960px) {
   .hero-grid,
   .console-grid,
+  .settings-grid,
   .advanced-control-grid,
   .control-grid,
   .evidence-grid,
@@ -609,6 +648,7 @@ a {
   }
 
   .context-strip,
+  .section-head,
   .advanced-actions,
   .timer-strip {
     align-items: flex-start;
@@ -631,6 +671,7 @@ a {
 
   .hero-grid,
   .console-grid,
+  .settings-grid,
   .preset-grid,
   .modal-grid {
     grid-template-columns: 1fr;
@@ -642,7 +683,7 @@ a {
   }
 
   .timer-strip strong {
-    font-size: 2rem;
+    font-size: 2.5rem;
   }
 
   .button-row,

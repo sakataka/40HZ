@@ -34,36 +34,6 @@ export default function App({ engine = sharedAudioEngine }: AppProps) {
 
   return (
     <main className="app-shell">
-      <section className="hero-card">
-        <p className="eyebrow">Controlled 40 Hz Listening Chamber</p>
-        <div className="hero-grid">
-          <div>
-            <h1>Controlled 40 Hz playback.</h1>
-            <p className="hero-copy">
-              A bounded session console for legal, self-administered listening tests using conservative defaults, limited human EEG findings, and a short audibility check.
-            </p>
-          </div>
-          <div className="hero-metrics" aria-label="session summary">
-            <div className="metric">
-              <span>Pulse rate</span>
-              <strong>{settings.pulseHz}Hz</strong>
-            </div>
-            <div className="metric">
-              <span>Session length</span>
-              <strong>{formatDurationLabel(settings.durationMinutes)}</strong>
-            </div>
-            <div className="metric">
-              <span>Current mode</span>
-              <strong>{activeProfile.label}</strong>
-            </div>
-            <div className="metric">
-              <span>Output</span>
-              <strong>{formatOutputMode(userContext.outputMode)}</strong>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <PlayerPanel
         profiles={RECOMMENDATION_PROFILES}
         activeProfile={activeProfile}
@@ -78,6 +48,36 @@ export default function App({ engine = sharedAudioEngine }: AppProps) {
         onResetCalibration={resetCalibration}
         onUpdateSettings={updateSettings}
       />
+
+      <section className="hero-card">
+        <p className="eyebrow">40 Hz 管理リスニング室</p>
+        <div className="hero-grid">
+          <div>
+            <h1>40 Hz セッション制御盤</h1>
+            <p className="hero-copy">
+              音量を抑え、短い確認を挟みながら使う、自分用のリスニング制御パネルです。
+            </p>
+          </div>
+          <div className="hero-metrics" aria-label="session summary">
+            <div className="metric">
+              <span>パルス</span>
+              <strong>{settings.pulseHz}Hz</strong>
+            </div>
+            <div className="metric">
+              <span>長さ</span>
+              <strong>{formatDurationLabel(settings.durationMinutes)}</strong>
+            </div>
+            <div className="metric">
+              <span>モード</span>
+              <strong>{activeProfile.label}</strong>
+            </div>
+            <div className="metric">
+              <span>出力</span>
+              <strong>{formatOutputMode(userContext.outputMode)}</strong>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <EvidencePanel />
 
