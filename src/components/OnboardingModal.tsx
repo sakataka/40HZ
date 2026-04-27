@@ -11,6 +11,8 @@ const SAFETY_POINTS = [
   '成人が静かな環境で自分用に使うことを前提にしています。',
   '不快感、めまい、頭痛があればすぐ停止してください。',
   '音量は低く、はっきり聞こえる最小限から始めてください。',
+  '運転中、作業中、周囲への注意が必要な状況では使わないでください。',
+  '発作歴など医療上の事情がある場合は、使用前に専門家へ相談してください。',
 ];
 
 export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalProps) {

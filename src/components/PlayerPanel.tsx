@@ -63,10 +63,6 @@ export function PlayerPanel({
 
       <div className="playback-console">
         <div className="timer-strip">
-          <div>
-            <span>残り時間</span>
-            <strong>{formatCountdown(sessionState.remainingMs)}</strong>
-          </div>
           <div className="button-row">
             <button className="primary-button" type="button" onClick={() => void onStart()} disabled={!canStart}>
               セッション開始
@@ -75,8 +71,13 @@ export function PlayerPanel({
               停止
             </button>
           </div>
+          <div className="timer-readout">
+            <span>残り時間</span>
+            <strong>{formatCountdown(sessionState.remainingMs)}</strong>
+          </div>
         </div>
 
+        <p className="context-label">現在設定</p>
         <div className="context-chip-row" aria-label="現在の設定">
           <div className="duration-chip">
             <span>モード</span>
