@@ -108,10 +108,12 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Skip and use 220 Hz' }));
 
     await waitFor(() => expect(screen.getByText('19%')).toBeInTheDocument());
+    expect(screen.queryByText('5.0 s')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show advanced settings' }));
     expect(screen.getByText('5.0 s')).toBeInTheDocument();
   });
 
-  it('keeps carrier frequency in advanced settings only', async () => {
+  it('keeps non-volume range controls in advanced settings only', async () => {
     const engine = createMockEngine();
     render(<App engine={engine} />);
 
@@ -126,8 +128,13 @@ describe('App', () => {
     });
 
     expect(screen.queryByLabelText('Base tone (advanced)')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Fade')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Background noise')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Volume')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Show advanced settings' }));
     expect(screen.getByLabelText('Base tone (advanced)')).toBeInTheDocument();
+    expect(screen.getByLabelText('Fade')).toBeInTheDocument();
+    expect(screen.getByLabelText('Background noise')).toBeInTheDocument();
   });
 
   it('shows evidence notes separating supported and exploratory guidance', async () => {
@@ -440,6 +447,8 @@ describe('App', () => {
 
     expect(screen.getAllByText('520Hz').length).toBeGreaterThan(0);
     expect(screen.getByText('5%')).toBeInTheDocument();
+    expect(screen.queryByText('1.0 s')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show advanced settings' }));
     expect(screen.getByText('1.0 s')).toBeInTheDocument();
     expect(screen.getAllByText('Speakers').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Sensitive').length).toBeGreaterThan(0);

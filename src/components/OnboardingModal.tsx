@@ -24,10 +24,6 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
       <div className="modal-card">
         <p className="section-label">Controlled Setup</p>
         <h2 id="setup-title">Two quick preflight questions</h2>
-        <p className="hero-copy">
-          We only use your listening setup and sound sensitivity to choose conservative starting settings for this managed session.
-        </p>
-
         <div className="modal-grid">
           <fieldset className="option-group">
             <legend>Sound sensitivity</legend>
@@ -74,19 +70,22 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
           </fieldset>
         </div>
 
-        <ul className="safety-list">
+        <ul className="safety-list" aria-label="Safety notes">
           {SAFETY_POINTS.map((point) => (
             <li key={point}>{point}</li>
           ))}
         </ul>
 
-        <button
-          className="primary-button"
-          type="button"
-          onClick={() => onComplete({ soundSensitivity, outputMode })}
-        >
-          Use these settings
-        </button>
+        <div className="modal-footer">
+          <p className="hero-copy">Used only to choose conservative starting settings.</p>
+          <button
+            className="primary-button"
+            type="button"
+            onClick={() => onComplete({ soundSensitivity, outputMode })}
+          >
+            Use these settings
+          </button>
+        </div>
       </div>
     </div>
   );

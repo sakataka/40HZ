@@ -25,8 +25,10 @@ export function CalibrationModal({
         <div className="calibration-grid">
           {[220, 440].map((carrierHz) => (
             <div className="calibration-card" key={carrierHz}>
-              <strong>{carrierHz}Hz</strong>
-              <p>{carrierHz === 220 ? 'Lower, softer control tone' : 'Brighter, more defined control tone'}</p>
+              <div>
+                <strong>{carrierHz}Hz</strong>
+                <p>{carrierHz === 220 ? 'Lower, softer control tone' : 'Brighter, more defined control tone'}</p>
+              </div>
               <div className="button-row">
                 <button
                   className="ghost-button"

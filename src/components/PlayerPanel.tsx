@@ -61,159 +61,166 @@ export function PlayerPanel({
         <div className={`status-pill status-${sessionState.status}`}>{statusLabel}</div>
       </div>
 
-      <div className="preset-grid">
-        {limitedProfiles.map((profile) => (
-          <button
-            key={profile.id}
-            className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
-            type="button"
-            onClick={() => onApplyProfile(profile.id)}
-          >
-            <div className="preset-head">
-              <span>{profile.label}</span>
-              <small className="evidence-pill evidence-limited">Limited human data</small>
-            </div>
-            <strong>{profile.summary}</strong>
-            <small>{profile.description}</small>
-          </button>
-        ))}
-      </div>
+      <div className="console-grid">
+        <div className="console-column">
+          <div className="preset-grid">
+            {limitedProfiles.map((profile) => (
+              <button
+                key={profile.id}
+                className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
+                type="button"
+                onClick={() => onApplyProfile(profile.id)}
+              >
+                <div className="preset-head">
+                  <span>{profile.label}</span>
+                  <small className="evidence-pill evidence-limited">Limited human data</small>
+                </div>
+                <strong>{profile.summary}</strong>
+                <small>{profile.description}</small>
+              </button>
+            ))}
+          </div>
 
-      <div className="collapse-row">
-        <button className="inline-toggle" type="button" onClick={() => setShowExploratory((value) => !value)}>
-          {showExploratory ? 'Hide exploratory options' : 'Show exploratory options'}
-        </button>
-      </div>
-
-      {showExploratory ? (
-        <div className="exploratory-card">
-          {experimentalProfiles.map((profile) => (
-            <button
-              key={profile.id}
-              className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
-              type="button"
-              onClick={() => onApplyProfile(profile.id)}
-            >
-              <div className="preset-head">
-                <span>{profile.label}</span>
-                <small className="evidence-pill evidence-experimental">Experimental</small>
-              </div>
-              <strong>{profile.summary}</strong>
-              <small>{profile.description}</small>
-            </button>
-          ))}
-        </div>
-      ) : null}
-
-      <div className="context-strip">
-        <div>
-          <span>Listening setup</span>
-          <strong>{formatOutputMode(userContext.outputMode)}</strong>
-        </div>
-        <div>
-          <span>Sensitivity</span>
-          <strong>{formatSensitivity(userContext.soundSensitivity)}</strong>
-        </div>
-        <div>
-          <span>Base tone</span>
-          <strong>{activeBaseToneHz}Hz</strong>
-        </div>
-      </div>
-
-      <div className="timer-strip">
-        <div>
-          <span>Time left</span>
-          <strong>{formatCountdown(sessionState.remainingMs)}</strong>
-        </div>
-        <div className="button-row">
-          <button className="primary-button" type="button" onClick={() => void onStart()} disabled={!canStart}>
-            Start session
-          </button>
-          <button className="ghost-button" type="button" onClick={() => void onStop()} disabled={!canStop}>
-            Stop
-          </button>
-        </div>
-      </div>
-
-      <div className="duration-row" role="group" aria-label="Session length">
-        {[10, 20, 30].map((minutes) => (
-          <button
-            key={minutes}
-            className={`duration-chip ${settings.durationMinutes === minutes ? 'duration-active' : ''}`}
-            type="button"
-            onClick={() => onUpdateSettings({ durationMinutes: minutes })}
-          >
-            {minutes} min
-          </button>
-        ))}
-      </div>
-
-      <div className="guide-card">
-        <p className="section-label">Operator Notes</p>
-        <ul className="guide-list">
-          <li>Run sessions only in a quiet, legal, and controlled setting.</li>
-          <li>Some EEG studies observed stronger 40 Hz responses in eyes-closed or low-arousal conditions. If comfortable, you can try listening with your eyes closed.</li>
-          <li>Keep the volume no higher than clearly audible and comfortable; this is not a challenge or endurance test.</li>
-        </ul>
-      </div>
-
-      <div className="control-grid">
-        <RangeControl
-          label="Volume"
-          value={settings.masterVolume}
-          min={0.05}
-          max={0.9}
-          step={0.01}
-          displayValue={formatPercent(settings.masterVolume)}
-          onChange={(value) => onUpdateSettings({ masterVolume: value })}
-        />
-        <RangeControl
-          label="Fade"
-          value={settings.fadeInSec}
-          min={1}
-          max={10}
-          step={0.5}
-          displayValue={`${settings.fadeInSec.toFixed(1)} s`}
-          onChange={(value) => onUpdateSettings({ fadeInSec: value, fadeOutSec: value })}
-        />
-        <RangeControl
-          label="Background noise"
-          value={settings.backgroundNoiseLevel}
-          min={0}
-          max={0.3}
-          step={0.01}
-          displayValue={formatPercent(settings.backgroundNoiseLevel)}
-          onChange={(value) => onUpdateSettings({ backgroundNoiseLevel: value })}
-        />
-      </div>
-
-      <div className="collapse-row">
-        <button className="inline-toggle" type="button" onClick={() => setShowAdvanced((value) => !value)}>
-          {showAdvanced ? 'Hide advanced settings' : 'Show advanced settings'}
-        </button>
-      </div>
-
-      {showAdvanced ? (
-        <div className="advanced-card">
-          <RangeControl
-            label="Base tone (advanced)"
-            value={settings.carrierHz}
-            min={180}
-            max={520}
-            step={10}
-            displayValue={`${settings.carrierHz}Hz`}
-            onChange={(value) => onUpdateSettings({ carrierHz: value })}
-          />
-          <div className="advanced-actions">
-            <p>
-              This app does not auto-adjust by age or sex. The tone check is a usability shortcut for this device and listener, not a research-based optimization step. You can run it again at any time.
-            </p>
-            <button className="ghost-button" type="button" onClick={() => void onResetCalibration()}>
-              Run tone check again
+          <div className="collapse-row">
+            <button className="inline-toggle" type="button" onClick={() => setShowExploratory((value) => !value)}>
+              {showExploratory ? 'Hide exploratory options' : 'Show exploratory options'}
             </button>
           </div>
+
+          {showExploratory ? (
+            <div className="exploratory-card">
+              {experimentalProfiles.map((profile) => (
+                <button
+                  key={profile.id}
+                  className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
+                  type="button"
+                  onClick={() => onApplyProfile(profile.id)}
+                >
+                  <div className="preset-head">
+                    <span>{profile.label}</span>
+                    <small className="evidence-pill evidence-experimental">Experimental</small>
+                  </div>
+                  <strong>{profile.summary}</strong>
+                  <small>{profile.description}</small>
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          <div className="guide-card">
+            <p className="section-label">Operator Notes</p>
+            <p className="hero-copy">
+              Use a quiet, legal setting. Keep volume only clearly audible and comfortable; eyes-closed listening is optional if it feels comfortable.
+            </p>
+          </div>
         </div>
-      ) : null}
+
+        <div className="console-column">
+          <div className="context-chip-row" aria-label="Listening context">
+            <div className="duration-chip">
+              <span>Output</span>
+              <strong>{formatOutputMode(userContext.outputMode)}</strong>
+            </div>
+            <div className="duration-chip">
+              <span>Sensitivity</span>
+              <strong>{formatSensitivity(userContext.soundSensitivity)}</strong>
+            </div>
+            <div className="duration-chip">
+              <span>Base</span>
+              <strong>{activeBaseToneHz}Hz</strong>
+            </div>
+          </div>
+
+          <div className="timer-strip">
+            <div>
+              <span>Time left</span>
+              <strong>{formatCountdown(sessionState.remainingMs)}</strong>
+            </div>
+            <div className="button-row">
+              <button className="primary-button" type="button" onClick={() => void onStart()} disabled={!canStart}>
+                Start session
+              </button>
+              <button className="ghost-button stop-button" type="button" onClick={() => void onStop()} disabled={!canStop}>
+                Stop
+              </button>
+            </div>
+          </div>
+
+          <div className="duration-row" role="group" aria-label="Session length">
+            {[10, 20, 30].map((minutes) => (
+              <button
+                key={minutes}
+                className={`duration-chip ${settings.durationMinutes === minutes ? 'duration-active' : ''}`}
+                type="button"
+                onClick={() => onUpdateSettings({ durationMinutes: minutes })}
+              >
+                {minutes} min
+              </button>
+            ))}
+          </div>
+
+          <div className="control-grid">
+            <RangeControl
+              label="Volume"
+              value={settings.masterVolume}
+              min={0.05}
+              max={0.9}
+              step={0.01}
+              displayValue={formatPercent(settings.masterVolume)}
+              onChange={(value) => onUpdateSettings({ masterVolume: value })}
+            />
+          </div>
+
+          <div className="collapse-row">
+            <button className="inline-toggle" type="button" onClick={() => setShowAdvanced((value) => !value)}>
+              {showAdvanced ? 'Hide advanced settings' : 'Show advanced settings'}
+            </button>
+          </div>
+
+          {showAdvanced ? (
+            <div className="advanced-card">
+              <div className="advanced-control-grid">
+                <RangeControl
+                  label="Base tone (advanced)"
+                  value={settings.carrierHz}
+                  min={180}
+                  max={520}
+                  step={10}
+                  displayValue={`${settings.carrierHz}Hz`}
+                  onChange={(value) => onUpdateSettings({ carrierHz: value })}
+                />
+                <RangeControl
+                  label="Fade"
+                  value={settings.fadeInSec}
+                  min={1}
+                  max={10}
+                  step={0.5}
+                  displayValue={`${settings.fadeInSec.toFixed(1)} s`}
+                  onChange={(value) => onUpdateSettings({ fadeInSec: value, fadeOutSec: value })}
+                />
+                <RangeControl
+                  label="Background noise"
+                  value={settings.backgroundNoiseLevel}
+                  min={0}
+                  max={0.3}
+                  step={0.01}
+                  displayValue={formatPercent(settings.backgroundNoiseLevel)}
+                  onChange={(value) => onUpdateSettings({ backgroundNoiseLevel: value })}
+                />
+              </div>
+
+              <div className="advanced-actions">
+                <p>
+                  This app does not auto-adjust by age or sex. The tone check is a usability shortcut for this device and listener, not a research-based optimization step. You can run it again at any time.
+                </p>
+                <button className="ghost-button" type="button" onClick={() => void onResetCalibration()}>
+                  Run tone check again
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
     </section>
   );
 }

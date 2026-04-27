@@ -90,11 +90,11 @@ a {
 }
 
 .app-shell {
-  width: min(1120px, calc(100% - 32px));
+  width: min(1160px, calc(100% - 28px));
   margin: 0 auto;
-  padding: 40px 0 64px;
+  padding: 28px 0 48px;
   display: grid;
-  gap: 24px;
+  gap: 18px;
 }
 
 .hero-card,
@@ -112,7 +112,7 @@ a {
 
 .hero-card {
   border-radius: 12px;
-  padding: 28px;
+  padding: 22px;
   position: relative;
   overflow: hidden;
 }
@@ -149,7 +149,7 @@ a {
 
 .hero-grid {
   display: grid;
-  gap: 24px;
+  gap: 18px;
   grid-template-columns: 1.5fr 1fr;
 }
 
@@ -173,12 +173,14 @@ a {
 
 .hero-metrics,
 .control-grid,
+.advanced-control-grid,
+.console-grid,
 .preset-grid,
 .evidence-grid,
 .modal-grid,
 .calibration-grid {
   display: grid;
-  gap: 14px;
+  gap: 11px;
 }
 
 .hero-metrics {
@@ -202,7 +204,7 @@ a {
 }
 
 .metric {
-  padding: 18px;
+  padding: 14px;
 }
 
 .metric span {
@@ -219,7 +221,7 @@ a {
 
 .panel {
   border-radius: 12px;
-  padding: 28px;
+  padding: 22px;
   position: relative;
   overflow: hidden;
 }
@@ -230,7 +232,8 @@ a {
 .control-meta,
 .preset-head,
 .advanced-actions,
-.context-strip {
+.context-strip,
+.modal-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -238,7 +241,8 @@ a {
 }
 
 .panel-header {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
 }
 
 .status-pill,
@@ -271,9 +275,19 @@ a {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.console-grid {
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+  align-items: start;
+}
+
+.console-column {
+  display: grid;
+  gap: 11px;
+}
+
 .preset-card {
-  min-height: 156px;
-  padding: 18px;
+  min-height: 124px;
+  padding: 14px;
   border-radius: 8px;
   text-align: left;
   background:
@@ -300,13 +314,13 @@ a {
 
 .preset-card strong {
   display: block;
-  margin-top: 14px;
+  margin-top: 10px;
   font-size: 1rem;
 }
 
 .preset-card small {
   display: block;
-  margin-top: 8px;
+  margin-top: 6px;
   color: var(--text-muted);
 }
 
@@ -335,7 +349,7 @@ a {
 }
 
 .collapse-row {
-  margin: 14px 0;
+  margin: 10px 0;
 }
 
 .inline-toggle,
@@ -347,7 +361,7 @@ a {
   color: var(--text-main);
   border: 1px solid var(--line-dim);
   border-radius: 6px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
 }
 
@@ -355,12 +369,13 @@ a {
 .guide-card,
 .advanced-card,
 .sources-card {
-  padding: 18px;
+  padding: 14px;
 }
 
 .context-strip {
-  padding: 16px 18px;
-  margin: 12px 0 18px;
+  padding: 12px 14px;
+  margin: 10px 0 14px;
+  flex-wrap: wrap;
 }
 
 .context-strip > div span,
@@ -377,11 +392,11 @@ a {
 }
 
 .timer-strip {
-  padding: 18px 20px;
+  padding: 14px 16px;
 }
 
 .timer-strip strong {
-  font-size: 2.4rem;
+  font-size: 2.08rem;
 }
 
 .button-row {
@@ -393,7 +408,7 @@ a {
   background: linear-gradient(135deg, #f2c56d, #d98a50);
   font-weight: 800;
   border-radius: 6px;
-  padding: 14px 18px;
+  padding: 12px 16px;
   border: 1px solid rgba(255, 222, 154, 0.42);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.24),
@@ -407,11 +422,33 @@ a {
   cursor: not-allowed;
 }
 
-.duration-row {
+.duration-row,
+.context-chip-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin: 16px 0;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.context-chip-row {
+  margin-top: 0;
+}
+
+.duration-chip span {
+  display: block;
+  font-size: 0.76rem;
+  color: var(--text-faint);
+}
+
+.duration-chip strong {
+  display: block;
+  margin-top: 2px;
+}
+
+.stop-button:not(:disabled) {
+  border-color: rgba(238, 74, 79, 0.48);
+  color: #ffd4d2;
+  box-shadow: inset 0 0 0 1px rgba(183, 47, 53, 0.16);
 }
 
 .duration-active {
@@ -430,17 +467,21 @@ a {
 .guide-list li + li,
 .safety-list li + li,
 .source-list li + li {
-  margin-top: 10px;
+  margin-top: 7px;
 }
 
 .control-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
+}
+
+.advanced-control-grid {
+  grid-template-columns: 1fr;
 }
 
 .control-card {
   display: grid;
-  gap: 14px;
-  padding: 18px;
+  gap: 10px;
+  padding: 14px;
   border-radius: 8px;
   background:
     linear-gradient(180deg, rgba(95, 163, 125, 0.05), rgba(255, 255, 255, 0.01)),
@@ -454,7 +495,7 @@ a {
 }
 
 .advanced-actions {
-  margin-top: 18px;
+  margin-top: 14px;
   align-items: flex-start;
 }
 
@@ -470,15 +511,15 @@ a {
 
 .evidence-card,
 .calibration-card {
-  padding: 18px;
+  padding: 14px;
 }
 
 .evidence-card h3 {
-  margin: 12px 0 8px;
+  margin: 10px 0 6px;
 }
 
 .sources-card {
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .modal-backdrop {
@@ -486,29 +527,41 @@ a {
   inset: 0;
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding: 16px;
   background: rgba(5, 7, 6, 0.82);
   z-index: 20;
+  overflow-y: auto;
 }
 
 .modal-card {
-  width: min(760px, 100%);
+  width: min(680px, 100%);
+  max-height: min(820px, calc(100vh - 32px));
+  overflow-y: auto;
   border-radius: 12px;
-  padding: 28px;
+  padding: 22px;
   position: relative;
-  overflow: hidden;
 }
 
 .modal-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin: 18px 0 20px;
+  margin: 14px 0 16px;
+}
+
+.modal-footer {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.modal-footer > * {
+  min-width: min(100%, 11rem);
 }
 
 .option-group {
   margin: 0;
   border: 1px solid var(--line-dim);
   border-radius: 8px;
-  padding: 14px 16px 16px;
+  padding: 12px 14px 14px;
   background: rgba(13, 17, 16, 0.74);
 }
 
@@ -520,8 +573,9 @@ a {
 .option-group label {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 8px;
+  min-width: 0;
 }
 
 .option-group input {
@@ -541,11 +595,13 @@ a {
 
 .calibration-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin: 20px 0 18px;
+  margin: 14px 0;
 }
 
 @media (max-width: 960px) {
   .hero-grid,
+  .console-grid,
+  .advanced-control-grid,
   .control-grid,
   .evidence-grid,
   .calibration-grid {
@@ -574,6 +630,7 @@ a {
   }
 
   .hero-grid,
+  .console-grid,
   .preset-grid,
   .modal-grid {
     grid-template-columns: 1fr;
@@ -589,8 +646,13 @@ a {
   }
 
   .button-row,
+  .modal-footer,
   .primary-button,
   .ghost-button {
     width: 100%;
+  }
+
+  .modal-footer {
+    align-items: stretch;
   }
 }
