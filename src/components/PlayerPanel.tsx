@@ -42,45 +42,56 @@ export function PlayerPanel({
   const canStop = sessionState.status === 'running';
   const limitedProfiles = profiles.filter((profile) => profile.evidenceLevel === 'limited');
   const experimentalProfiles = profiles.filter((profile) => profile.evidenceLevel === 'experimental');
-  const statusLabel =
-    sessionState.status === 'starting'
-      ? '起動中'
-      : sessionState.status === 'running'
-        ? '再生中'
-        : sessionState.status === 'stopping'
-          ? '停止中'
-          : '待機中';
 
   return (
-    <section className="panel">
+    <section className={`panel player-panel session-${sessionState.status}`}>
       <div className="panel-header">
         <div>
-          <p className="section-label">セッション制御</p>
-          <h2>再生と停止</h2>
+          <p className="section-label">運用制御</p>
+          <h2>照射許可と遮断</h2>
         </div>
-        <div className={`status-pill status-${sessionState.status}`}>{statusLabel}</div>
+      </div>
+
+      <div className="panel-signal-row">
+        <div className="signal-visualizer" aria-hidden="true">
+          {Array.from({ length: 11 }, (_, index) => (
+            <span key={index} />
+          ))}
+        </div>
       </div>
 
       <div className="playback-console">
         <div className="timer-strip">
           <div className="button-row">
-            <button className="primary-button" type="button" onClick={() => void onStart()} disabled={!canStart}>
+            <button
+              aria-label="セッション開始"
+              className="primary-button"
+              type="button"
+              onClick={() => void onStart()}
+              disabled={!canStart}
+            >
               セッション開始
             </button>
-            <button className="ghost-button stop-button" type="button" onClick={() => void onStop()} disabled={!canStop}>
+            <button
+              aria-label="停止"
+              className="ghost-button stop-button"
+              type="button"
+              onClick={() => void onStop()}
+              disabled={!canStop}
+            >
               停止
             </button>
           </div>
           <div className="timer-readout">
-            <span>残り時間</span>
+            <span>残り滞在時間</span>
             <strong>{formatCountdown(sessionState.remainingMs)}</strong>
           </div>
         </div>
 
-        <p className="context-label">現在設定</p>
+        <p className="context-label">現在の許可条件</p>
         <div className="context-chip-row" aria-label="現在の設定">
           <div className="duration-chip">
-            <span>モード</span>
+            <span>プロトコル</span>
             <strong>{activeProfile.label}</strong>
           </div>
           <div className="duration-chip">
@@ -101,10 +112,10 @@ export function PlayerPanel({
       <div className="settings-section">
         <div className="section-head">
           <div>
-            <p className="section-label">設定</p>
-            <h3>再生中でも調整できます</h3>
+            <p className="section-label">許容範囲</p>
+            <h3>稼働中も触れるつまみ</h3>
           </div>
-          <p>不快感、めまい、頭痛があればすぐ停止してください。</p>
+          <p>気分が悪い、めまい、頭痛、妙な圧迫感があれば即時遮断してください。</p>
         </div>
 
         <div className="settings-grid">
@@ -201,15 +212,6 @@ export function PlayerPanel({
                     step={10}
                     displayValue={`${settings.carrierHz}Hz`}
                     onChange={(value) => onUpdateSettings({ carrierHz: value })}
-                  />
-                  <RangeControl
-                    label="フェード"
-                    value={settings.fadeInSec}
-                    min={1}
-                    max={10}
-                    step={0.5}
-                    displayValue={`${settings.fadeInSec.toFixed(1)}秒`}
-                    onChange={(value) => onUpdateSettings({ fadeInSec: value, fadeOutSec: value })}
                   />
                   <RangeControl
                     label="背景ノイズ"

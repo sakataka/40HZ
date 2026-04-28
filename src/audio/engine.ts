@@ -55,11 +55,7 @@ export class IsochronicAudioEngine implements AudioEngine {
       await context.resume();
 
       output.gain.cancelScheduledValues(context.currentTime);
-      output.gain.setValueAtTime(0, context.currentTime);
-      output.gain.linearRampToValueAtTime(
-        settings.masterVolume,
-        context.currentTime + settings.fadeInSec,
-      );
+      output.gain.setValueAtTime(settings.masterVolume, context.currentTime);
 
       this.state = { status: 'running', lastReason: 'manual' };
     } catch (error) {
@@ -80,11 +76,8 @@ export class IsochronicAudioEngine implements AudioEngine {
 
     this.state = { status: 'stopping', lastReason: reason };
 
-    const fadeOutAt = active.context.currentTime + currentSettings.fadeOutSec;
     active.output.gain.cancelScheduledValues(active.context.currentTime);
-    active.output.gain.setValueAtTime(active.output.gain.value, active.context.currentTime);
-    active.output.gain.linearRampToValueAtTime(0, fadeOutAt);
-    await wait(currentSettings.fadeOutSec * 1000 + 50);
+    active.output.gain.setValueAtTime(0, active.context.currentTime);
     await this.forceClose();
     this.state = { status: 'idle', lastReason: reason };
   }
@@ -152,9 +145,3 @@ function toErrorMessage(error: unknown): string {
 }
 
 export const sharedAudioEngine = new IsochronicAudioEngine();
-
-function wait(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, milliseconds);
-  });
-}

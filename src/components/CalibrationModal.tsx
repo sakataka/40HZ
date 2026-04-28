@@ -16,10 +16,10 @@ export function CalibrationModal({
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="calibration-title">
       <div className="modal-card">
-        <p className="section-label">トーン確認</p>
+        <p className="section-label">基準音の儀式</p>
         <h2 id="calibration-title">220 Hz と 440 Hz を比べる</h2>
         <p className="hero-copy">
-          今の出力環境で聞き取りやすい基準音を選ぶための確認です。研究にもとづく最適化ではありません。
+          今の出力環境で聞き取りやすい基準音を選ぶための確認です。研究にもとづく最適化ではなく、耳との相性確認です。
         </p>
 
         <div className="calibration-grid">

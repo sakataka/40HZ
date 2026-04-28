@@ -25,8 +25,8 @@ describe('session settings', () => {
       carrierHz: 520,
       masterVolume: 0.9,
       durationMinutes: 60,
-      fadeInSec: 1,
-      fadeOutSec: 10,
+      fadeInSec: 0,
+      fadeOutSec: 0,
       backgroundNoiseLevel: 0,
       profileId: 'recommended',
       modulationStyle: 'gated',
@@ -42,6 +42,7 @@ describe('session settings', () => {
     );
 
     expect(sensitive.masterVolume).toBeLessThan(standard.masterVolume);
-    expect(sensitive.fadeInSec).toBeGreaterThan(standard.fadeInSec);
+    expect(sensitive.fadeInSec).toBe(0);
+    expect(sensitive.fadeOutSec).toBe(0);
   });
 });

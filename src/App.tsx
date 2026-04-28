@@ -34,13 +34,13 @@ export default function App({ engine = sharedAudioEngine }: AppProps) {
   return (
     <main className="app-shell">
       <section className="title-card" aria-labelledby="app-title">
-        <p className="eyebrow">40 Hz 管理リスニング室</p>
+        <p className="eyebrow">合法音響観測室 / non-medical</p>
         <h1 id="app-title">
           40 Hz
-          <span>セッション制御盤</span>
+          <span>灰色聴取プロトコル</span>
         </h1>
         <p className="title-copy">
-          残り時間と再生操作を最優先に置いた、40 Hz 用のリスニング制御パネルです。
+          治療ではない、保証もしない。ただ 40 Hz の脈動を、静かな部屋で慎重に扱うための制御盤です。
         </p>
       </section>
 

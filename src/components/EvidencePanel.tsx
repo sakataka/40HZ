@@ -3,8 +3,8 @@ export function EvidencePanel() {
     <section className="panel">
       <div className="panel-header">
         <div>
-          <p className="section-label">根拠と限界</p>
-          <h2>この設定の考え方</h2>
+          <p className="section-label">免責と出典</p>
+          <h2>合法だが、効能は売らない</h2>
         </div>
       </div>
 
@@ -13,7 +13,7 @@ export function EvidencePanel() {
           <small className="evidence-pill evidence-limited">限定的な人でのデータ</small>
           <h3>音だけの一般利用を裏づける証拠は限定的です</h3>
           <p>
-            ここで参照している研究は参考になりますが、範囲は限られています。このアプリは治療設定ではなく、控えめな初期値を使います。
+            ここで参照している研究は参考資料です。治療設定ではなく、控えめな初期値と停止しやすい操作を優先します。
           </p>
         </article>
 

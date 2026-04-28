@@ -28,7 +28,6 @@ const LIMITS = {
   carrierHz: BASE_TONE_LIMITS,
   masterVolume: { min: 0.05, max: 0.9 },
   durationMinutes: { min: 1, max: 60 },
-  fadeSec: { min: 1, max: 10 },
   backgroundNoiseLevel: { min: 0, max: 0.3 },
 } as const;
 
@@ -46,8 +45,8 @@ export function deriveSessionSettings(
     carrierHz: normalizeBaseToneHz(calibration.preferredBaseToneHz),
     masterVolume: getStartingVolume(profile.id, sensitivity, outputMode),
     durationMinutes: profile.durationMinutes,
-    fadeInSec: getFadeSeconds(profile.id, sensitivity),
-    fadeOutSec: getFadeSeconds(profile.id, sensitivity),
+    fadeInSec: 0,
+    fadeOutSec: 0,
     backgroundNoiseLevel: getNoiseLevel(profile.id, outputMode),
     profileId: profile.id,
     modulationStyle: profile.modulationStyle,
@@ -65,8 +64,8 @@ export function deriveCalibrationPreviewSettings(
       skipped: false,
     }),
     durationMinutes: 1,
-    fadeInSec: 1.5,
-    fadeOutSec: 1.5,
+    fadeInSec: 0,
+    fadeOutSec: 0,
   });
 }
 
@@ -78,8 +77,8 @@ export function validateSessionSettings(input: SessionSettings): SessionSettings
     durationMinutes: Math.round(
       clamp(input.durationMinutes, LIMITS.durationMinutes.min, LIMITS.durationMinutes.max),
     ),
-    fadeInSec: round(clamp(input.fadeInSec, LIMITS.fadeSec.min, LIMITS.fadeSec.max)),
-    fadeOutSec: round(clamp(input.fadeOutSec, LIMITS.fadeSec.min, LIMITS.fadeSec.max)),
+    fadeInSec: 0,
+    fadeOutSec: 0,
     backgroundNoiseLevel: round(
       clamp(input.backgroundNoiseLevel, LIMITS.backgroundNoiseLevel.min, LIMITS.backgroundNoiseLevel.max),
     ),
@@ -121,17 +120,6 @@ function getStartingVolume(
   const outputOffset = outputMode === 'speaker' ? 0.03 : 0;
 
   return round(base + sensitivityOffset + outputOffset);
-}
-
-function getFadeSeconds(profileId: string, sensitivity: SoundSensitivity): number {
-  const base =
-    profileId === 'gentle'
-      ? 6
-      : profileId === 'exploratory'
-        ? 4
-        : 3.5;
-
-  return sensitivity === 'sensitive' ? base + 1.5 : base;
 }
 
 function getNoiseLevel(profileId: string, outputMode: OutputMode): number {

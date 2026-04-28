@@ -13,7 +13,7 @@ export const RECOMMENDATION_PROFILES: RecommendationProfile[] = [
   {
     id: 'gentle',
     label: 'やさしめ',
-    summary: '音量を抑え、フェードを長めにした入口',
+    summary: '音量を抑えた慎重な入口',
     description: '刺激感を抑えて、より慎重に始めたい人向けの設定です。',
     evidenceLevel: 'limited',
     modulationStyle: 'sine',

@@ -110,10 +110,11 @@ describe('App', () => {
     await waitFor(() => expect(screen.getByText('19%')).toBeInTheDocument());
     expect(screen.queryByText('5.0秒')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '詳細設定を表示' }));
-    expect(screen.getByText('5.0秒')).toBeInTheDocument();
+    expect(screen.queryByText('5.0秒')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('フェード')).not.toBeInTheDocument();
   });
 
-  it('keeps non-volume range controls in advanced settings only', async () => {
+  it('keeps technical range controls in advanced settings only', async () => {
     const engine = createMockEngine();
     render(<App engine={engine} />);
 
@@ -128,12 +129,11 @@ describe('App', () => {
     });
 
     expect(screen.queryByLabelText('基準音（詳細）')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('フェード')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('背景ノイズ')).not.toBeInTheDocument();
     expect(screen.getByLabelText('音量')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '詳細設定を表示' }));
     expect(screen.getByLabelText('基準音（詳細）')).toBeInTheDocument();
-    expect(screen.getByLabelText('フェード')).toBeInTheDocument();
+    expect(screen.queryByLabelText('フェード')).not.toBeInTheDocument();
     expect(screen.getByLabelText('背景ノイズ')).toBeInTheDocument();
   });
 
@@ -197,7 +197,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
 
     await waitFor(() => expect(engine.start).toHaveBeenCalledTimes(1));
-    expect(screen.getByText('起動中')).toBeInTheDocument();
+    expect(screen.queryByText('起動中')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'セッション開始' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '停止' })).toBeDisabled();
 
@@ -206,7 +206,7 @@ describe('App', () => {
       await deferredStart.promise;
     });
 
-    expect(screen.getByText('再生中')).toBeInTheDocument();
+    expect(screen.queryByText('再生中')).not.toBeInTheDocument();
   });
 
   it('returns to a safe idle state when engine start fails', async () => {
@@ -219,7 +219,7 @@ describe('App', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
 
-    await waitFor(() => expect(screen.getByText('待機中')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'セッション開始' })).toBeEnabled());
     expect(screen.getByRole('button', { name: 'セッション開始' })).toBeEnabled();
     expect(screen.getByRole('button', { name: '停止' })).toBeDisabled();
   });
@@ -234,10 +234,10 @@ describe('App', () => {
     await finishSetup();
 
     fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
-    await waitFor(() => expect(screen.getByText('再生中')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('button', { name: '停止' })).toBeEnabled());
 
     fireEvent.click(screen.getByRole('button', { name: '停止' }));
-    expect(screen.getByText('停止中')).toBeInTheDocument();
+    expect(screen.queryByText('停止中')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '停止' }));
 
     expect(engine.stop).toHaveBeenCalledTimes(1);
@@ -247,7 +247,7 @@ describe('App', () => {
       await deferredStop.promise;
     });
 
-    expect(screen.getByText('待機中')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'セッション開始' })).toBeEnabled();
   });
 
   it('keeps the live base tone in sync with advanced edits and profile changes', async () => {
@@ -410,7 +410,7 @@ describe('App', () => {
       await deferredStart.promise;
     });
 
-    expect(screen.getByText('再生中')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '停止' })).toBeEnabled();
   });
 
   it('hydrates persisted settings into a consistent state', async () => {
@@ -447,9 +447,9 @@ describe('App', () => {
 
     expect(screen.getAllByText('520Hz').length).toBeGreaterThan(0);
     expect(screen.getByText('5%')).toBeInTheDocument();
-    expect(screen.queryByText('1.0秒')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '詳細設定を表示' }));
-    expect(screen.getByText('1.0秒')).toBeInTheDocument();
+    expect(screen.queryByText('1.0秒')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('フェード')).not.toBeInTheDocument();
     expect(screen.getAllByText('スピーカー').length).toBeGreaterThan(0);
     expect(screen.getAllByText('音に敏感').length).toBeGreaterThan(0);
   });

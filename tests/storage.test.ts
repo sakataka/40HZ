@@ -73,8 +73,8 @@ describe('session storage', () => {
       expect.objectContaining({
         carrierHz: 520,
         masterVolume: 0.05,
-        fadeInSec: 1,
-        fadeOutSec: 10,
+        fadeInSec: 0,
+        fadeOutSec: 0,
         backgroundNoiseLevel: 0,
         profileId: 'recommended',
       }),
