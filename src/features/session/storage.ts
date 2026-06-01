@@ -23,12 +23,12 @@ export function loadStoredPreferences(): StoredSessionPreferences | null {
     return null;
   }
 
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
-    return null;
-  }
-
   try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
     return JSON.parse(raw) as StoredSessionPreferences;
   } catch {
     return null;
@@ -40,7 +40,11 @@ export function saveStoredPreferences(preferences: StoredSessionPreferences): vo
     return;
   }
 
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+  } catch {
+    // Storage can be unavailable or full; runtime state should remain usable.
+  }
 }
 
 export function hydrateStoredPreferences(

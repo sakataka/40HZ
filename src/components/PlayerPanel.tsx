@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type {
   RecommendationProfile,
   SessionSettings,
@@ -6,6 +6,9 @@ import type {
   UserContext,
 } from '../features/session/types';
 import { formatCountdown, formatOutputMode, formatPercent, formatSensitivity } from '../lib/format';
+
+const SIGNAL_BAR_INDICES = Array.from({ length: 11 }, (_, index) => index);
+const DURATION_OPTIONS = [10, 20, 30] as const;
 
 type PlayerPanelProps = {
   profiles: RecommendationProfile[];
@@ -40,8 +43,13 @@ export function PlayerPanel({
   const [showExploratory, setShowExploratory] = useState(false);
   const canStart = readyToStart && sessionState.status === 'idle';
   const canStop = sessionState.status === 'running';
-  const limitedProfiles = profiles.filter((profile) => profile.evidenceLevel === 'limited');
-  const experimentalProfiles = profiles.filter((profile) => profile.evidenceLevel === 'experimental');
+  const { limitedProfiles, experimentalProfiles } = useMemo(
+    () => ({
+      limitedProfiles: profiles.filter((profile) => profile.evidenceLevel === 'limited'),
+      experimentalProfiles: profiles.filter((profile) => profile.evidenceLevel === 'experimental'),
+    }),
+    [profiles],
+  );
 
   return (
     <section className={`panel player-panel session-${sessionState.status}`}>
@@ -54,7 +62,7 @@ export function PlayerPanel({
 
       <div className="panel-signal-row">
         <div className="signal-visualizer" aria-hidden="true">
-          {Array.from({ length: 11 }, (_, index) => (
+          {SIGNAL_BAR_INDICES.map((index) => (
             <span key={index} />
           ))}
         </div>
@@ -167,7 +175,7 @@ export function PlayerPanel({
 
           <div className="settings-column">
             <div className="duration-row" role="group" aria-label="セッションの長さ">
-              {[10, 20, 30].map((minutes) => (
+              {DURATION_OPTIONS.map((minutes) => (
                 <button
                   key={minutes}
                   className={`duration-chip ${settings.durationMinutes === minutes ? 'duration-active' : ''}`}

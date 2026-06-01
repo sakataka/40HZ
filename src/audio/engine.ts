@@ -87,7 +87,12 @@ export class IsochronicAudioEngine implements AudioEngine {
       return;
     }
 
-    this.latestSettings = { ...this.latestSettings, ...settings };
+    const nextSettings = { ...this.latestSettings, ...settings };
+    if (hasSameAudioSettings(this.latestSettings, nextSettings)) {
+      return;
+    }
+
+    this.latestSettings = nextSettings;
 
     if (!this.nodes) {
       return;
@@ -142,6 +147,16 @@ function toErrorMessage(error: unknown): string {
   }
 
   return 'Unknown audio engine error';
+}
+
+function hasSameAudioSettings(current: SessionSettings, next: SessionSettings): boolean {
+  return (
+    current.carrierHz === next.carrierHz &&
+    current.pulseHz === next.pulseHz &&
+    current.modulationStyle === next.modulationStyle &&
+    current.backgroundNoiseLevel === next.backgroundNoiseLevel &&
+    current.masterVolume === next.masterVolume
+  );
 }
 
 export const sharedAudioEngine = new IsochronicAudioEngine();

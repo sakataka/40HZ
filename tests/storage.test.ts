@@ -81,4 +81,40 @@ describe('session storage', () => {
     );
     expect(hydrated.calibration.preferredBaseToneHz).toBe(180);
   });
+
+  it('keeps storage failures from escaping into the session flow', () => {
+    const originalStorage = window.localStorage;
+    const failingStorage = {
+      ...originalStorage,
+      getItem() {
+        throw new Error('storage blocked');
+      },
+      setItem() {
+        throw new Error('storage full');
+      },
+    };
+
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: failingStorage,
+    });
+
+    try {
+      const fallbackPreferences = hydrateStoredPreferences(null);
+      expect(loadStoredPreferences()).toBeNull();
+      expect(() =>
+        saveStoredPreferences({
+          settings: fallbackPreferences.settings,
+          acceptedSafetyNotice: false,
+          userContext: fallbackPreferences.userContext,
+          calibration: fallbackPreferences.calibration,
+        }),
+      ).not.toThrow();
+    } finally {
+      Object.defineProperty(window, 'localStorage', {
+        configurable: true,
+        value: originalStorage,
+      });
+    }
+  });
 });
