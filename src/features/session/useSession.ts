@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AudioEngine } from '../../audio/engine';
-import { getRecommendationProfile } from './presets';
 import {
   hydrateStoredPreferences,
   loadStoredPreferences,
@@ -10,12 +9,9 @@ import type {
   CalibrationResult,
   SessionSettings,
   SessionState,
-  StopReason,
   UserContext,
 } from './types';
 import {
-  DEFAULT_CALIBRATION,
-  DEFAULT_USER_CONTEXT,
   deriveCalibrationPreviewSettings,
   deriveSessionSettings,
   mergeSessionSettings,
@@ -30,20 +26,18 @@ export function useSession(engine: AudioEngine) {
     hydrateStoredPreferences(loadStoredPreferences()),
   );
   const [userContext, setUserContext] = useState<UserContext>(() =>
-    initialPreferences.userContext ?? DEFAULT_USER_CONTEXT,
+    initialPreferences.userContext,
   );
   const [calibration, setCalibration] = useState<CalibrationResult>(() =>
-    initialPreferences.calibration ?? DEFAULT_CALIBRATION,
+    initialPreferences.calibration,
   );
   const [settings, setSettings] = useState<SessionSettings>(() =>
     initialPreferences.settings,
   );
   const [sessionState, setSessionState] = useState<SessionState>(() => ({
     status: 'idle',
-    startedAt: null,
     endsAt: null,
     remainingMs: settings.durationMinutes * 60_000,
-    acceptedSafetyNotice: initialPreferences.acceptedSafetyNotice,
   }));
   const [previewBaseToneHz, setPreviewBaseToneHz] = useState<number | null>(null);
   const [audioOperation, setAudioOperation] = useState<AudioOperation>('idle');
@@ -51,7 +45,6 @@ export function useSession(engine: AudioEngine) {
   const settingsRef = useRef(settings);
   const sessionStateRef = useRef(sessionState);
   const userContextRef = useRef(userContext);
-  const calibrationRef = useRef(calibration);
   const previewBaseToneHzRef = useRef(previewBaseToneHz);
   const audioOperationRef = useRef<AudioOperation>('idle');
 
@@ -68,21 +61,16 @@ export function useSession(engine: AudioEngine) {
   }, [userContext]);
 
   useEffect(() => {
-    calibrationRef.current = calibration;
-  }, [calibration]);
-
-  useEffect(() => {
     previewBaseToneHzRef.current = previewBaseToneHz;
   }, [previewBaseToneHz]);
 
   useEffect(() => {
     saveStoredPreferences({
       settings,
-      acceptedSafetyNotice: sessionState.acceptedSafetyNotice,
       userContext,
       calibration,
     });
-  }, [settings, sessionState.acceptedSafetyNotice, userContext, calibration]);
+  }, [settings, userContext, calibration]);
 
   useEffect(() => {
     if (sessionState.status === 'running') {
@@ -147,25 +135,23 @@ export function useSession(engine: AudioEngine) {
 
   useEffect(() => {
     if (sessionState.status === 'running' && sessionState.remainingMs <= 0) {
-      void stopSession('timer');
+      void stopSession();
     }
   }, [sessionState.remainingMs, sessionState.status]);
 
-  const setupComplete = sessionState.acceptedSafetyNotice && userContext.completedAt != null;
+  const setupComplete = userContext.completedAt != null;
   const calibrationComplete = calibration.completedAt != null;
-  const activeProfile = getRecommendationProfile(settings.profileId);
-  const activeBaseToneHz = settings.carrierHz;
   const calibrationBusy = audioOperation === 'previewing' || audioOperation === 'calibrating';
 
-  async function startSession(): Promise<boolean> {
+  async function startSession(): Promise<void> {
     const current = sessionStateRef.current;
     if (current.status !== 'idle' || !beginAudioOperation('starting')) {
-      return false;
+      return;
     }
 
     if (!setupComplete || !calibrationComplete) {
       endAudioOperation();
-      return false;
+      return;
     }
 
     setSessionState((previous) => ({
@@ -183,29 +169,24 @@ export function useSession(engine: AudioEngine) {
       setSessionState((previous) => ({
         ...previous,
         status: 'running',
-        startedAt: now,
         endsAt: now + activeSettings.durationMinutes * 60_000,
         remainingMs: activeSettings.durationMinutes * 60_000,
       }));
 
-      return true;
     } catch {
       const refreshedSettings = settingsRef.current;
       setSessionState((previous) => ({
         ...previous,
         status: 'idle',
-        startedAt: null,
         endsAt: null,
         remainingMs: refreshedSettings.durationMinutes * 60_000,
       }));
-
-      return false;
     } finally {
       endAudioOperation();
     }
   }
 
-  async function stopSession(reason: StopReason = 'manual'): Promise<void> {
+  async function stopSession(): Promise<void> {
     const current = sessionStateRef.current;
     if (current.status !== 'running' || !beginAudioOperation('stopping')) {
       return;
@@ -217,7 +198,7 @@ export function useSession(engine: AudioEngine) {
     }));
 
     try {
-      await engine.stop(reason);
+      await engine.stop();
     } catch {
       // Keep the UI recoverable even if the browser audio stack rejects a stop call.
     } finally {
@@ -225,7 +206,6 @@ export function useSession(engine: AudioEngine) {
       setSessionState((previous) => ({
         ...previous,
         status: 'idle',
-        startedAt: null,
         endsAt: null,
         remainingMs: refreshedSettings.durationMinutes * 60_000,
       }));
@@ -238,8 +218,9 @@ export function useSession(engine: AudioEngine) {
   }
 
   function applyProfile(profileId: string): void {
-    const derived = deriveSessionSettings(profileId, userContextRef.current, calibrationRef.current);
-    setSettings(mergeSessionSettings(derived, { carrierHz: settingsRef.current.carrierHz }));
+    setSettings(
+      deriveSessionSettings(profileId, userContextRef.current, settingsRef.current.carrierHz),
+    );
   }
 
   function completeOnboarding(nextContext: Omit<UserContext, 'completedAt'>): void {
@@ -249,11 +230,13 @@ export function useSession(engine: AudioEngine) {
     };
 
     setUserContext(completedContext);
-    setSessionState((current) => ({
-      ...current,
-      acceptedSafetyNotice: true,
-    }));
-    setSettings(deriveSessionSettings(settingsRef.current.profileId, completedContext, calibrationRef.current));
+    setSettings(
+      deriveSessionSettings(
+        settingsRef.current.profileId,
+        completedContext,
+        settingsRef.current.carrierHz,
+      ),
+    );
   }
 
   async function previewCalibration(carrierHz: number): Promise<void> {
@@ -274,7 +257,7 @@ export function useSession(engine: AudioEngine) {
     }
   }
 
-  async function completeCalibration(carrierHz: number, skipped: boolean): Promise<void> {
+  async function completeCalibration(carrierHz: number): Promise<void> {
     if (!beginAudioOperation('calibrating')) {
       return;
     }
@@ -282,11 +265,7 @@ export function useSession(engine: AudioEngine) {
     try {
       await stopPreviewAudio();
 
-      const nextCalibration: CalibrationResult = {
-        preferredBaseToneHz: carrierHz,
-        completedAt: Date.now(),
-        skipped,
-      };
+      const nextCalibration: CalibrationResult = { completedAt: Date.now() };
 
       setCalibration(nextCalibration);
       setSettings((current) => mergeSessionSettings(current, { carrierHz }));
@@ -305,7 +284,6 @@ export function useSession(engine: AudioEngine) {
       setCalibration((current) => ({
         ...current,
         completedAt: null,
-        skipped: false,
       }));
     } finally {
       endAudioOperation();
@@ -318,7 +296,7 @@ export function useSession(engine: AudioEngine) {
     }
 
     try {
-      await engine.stop('manual');
+      await engine.stop();
     } catch {
       // Keep calibration controls recoverable if the browser audio stack rejects a stop call.
     } finally {
@@ -342,8 +320,6 @@ export function useSession(engine: AudioEngine) {
   }
 
   return {
-    activeProfile,
-    calibration,
     calibrationComplete,
     completeCalibration,
     completeOnboarding,
@@ -358,7 +334,6 @@ export function useSession(engine: AudioEngine) {
     stopSession,
     updateSettings,
     applyProfile,
-    activeBaseToneHz,
     userContext,
   };
 }

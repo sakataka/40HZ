@@ -1,10 +1,10 @@
-import type { SessionSettings, AudioEngineState, StopReason } from '../features/session/types';
+import { getRecommendationProfile } from '../features/session/presets';
+import type { SessionSettings } from '../features/session/types';
 
 export interface AudioEngine {
   start(settings: SessionSettings): Promise<void>;
-  stop(reason?: StopReason): Promise<void>;
+  stop(): Promise<void>;
   update(settings: Partial<SessionSettings>): void;
-  getState(): AudioEngineState;
 }
 
 type RunningNodes = {
@@ -15,10 +15,6 @@ type RunningNodes = {
 
 export class IsochronicAudioEngine implements AudioEngine {
   private nodes: RunningNodes | null = null;
-  private state: AudioEngineState = {
-    status: 'idle',
-    lastReason: 'manual',
-  };
   private latestSettings: SessionSettings | null = null;
 
   async start(settings: SessionSettings): Promise<void> {
@@ -27,11 +23,8 @@ export class IsochronicAudioEngine implements AudioEngine {
     if (this.nodes) {
       this.update(settings);
       await this.nodes.context.resume();
-      this.state = { status: 'running', lastReason: 'manual' };
       return;
     }
-
-    this.state = { status: 'starting', lastReason: 'manual' };
 
     try {
       const context = new AudioContext();
@@ -57,29 +50,22 @@ export class IsochronicAudioEngine implements AudioEngine {
       output.gain.cancelScheduledValues(context.currentTime);
       output.gain.setValueAtTime(settings.masterVolume, context.currentTime);
 
-      this.state = { status: 'running', lastReason: 'manual' };
     } catch (error) {
-      this.state = { status: 'error', lastReason: 'error', error: toErrorMessage(error) };
       await this.forceClose();
       throw error;
     }
   }
 
-  async stop(reason: StopReason = 'manual'): Promise<void> {
+  async stop(): Promise<void> {
     const active = this.nodes;
-    const currentSettings = this.latestSettings;
 
-    if (!active || !currentSettings) {
-      this.state = { status: 'idle', lastReason: reason };
+    if (!active) {
       return;
     }
-
-    this.state = { status: 'stopping', lastReason: reason };
 
     active.output.gain.cancelScheduledValues(active.context.currentTime);
     active.output.gain.setValueAtTime(0, active.context.currentTime);
     await this.forceClose();
-    this.state = { status: 'idle', lastReason: reason };
   }
 
   update(settings: Partial<SessionSettings>): void {
@@ -108,10 +94,6 @@ export class IsochronicAudioEngine implements AudioEngine {
     );
   }
 
-  getState(): AudioEngineState {
-    return this.state;
-  }
-
   private applyToNode(settings: SessionSettings): void {
     if (!this.nodes) {
       return;
@@ -119,10 +101,12 @@ export class IsochronicAudioEngine implements AudioEngine {
 
     const { context, node } = this.nodes;
     node.parameters.get('carrierHz')?.setValueAtTime(settings.carrierHz, context.currentTime);
-    node.parameters.get('pulseHz')?.setValueAtTime(settings.pulseHz, context.currentTime);
     node.parameters
       .get('modulationMode')
-      ?.setValueAtTime(settings.modulationStyle === 'gated' ? 1 : 0, context.currentTime);
+      ?.setValueAtTime(
+        getRecommendationProfile(settings.profileId).modulationStyle === 'gated' ? 1 : 0,
+        context.currentTime,
+      );
     node.parameters
       .get('noiseLevel')
       ?.setValueAtTime(settings.backgroundNoiseLevel, context.currentTime);
@@ -141,19 +125,10 @@ export class IsochronicAudioEngine implements AudioEngine {
   }
 }
 
-function toErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return 'Unknown audio engine error';
-}
-
 function hasSameAudioSettings(current: SessionSettings, next: SessionSettings): boolean {
   return (
     current.carrierHz === next.carrierHz &&
-    current.pulseHz === next.pulseHz &&
-    current.modulationStyle === next.modulationStyle &&
+    current.profileId === next.profileId &&
     current.backgroundNoiseLevel === next.backgroundNoiseLevel &&
     current.masterVolume === next.masterVolume
   );

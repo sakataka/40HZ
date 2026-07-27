@@ -1,34 +1,34 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type {
-  RecommendationProfile,
   SessionSettings,
   SessionState,
   UserContext,
 } from '../features/session/types';
-import { formatCountdown, formatOutputMode, formatPercent, formatSensitivity } from '../lib/format';
+import { getRecommendationProfile, RECOMMENDATION_PROFILES } from '../features/session/presets';
+import { SESSION_LIMITS } from '../lib/settings';
 
 const SIGNAL_BAR_INDICES = Array.from({ length: 11 }, (_, index) => index);
 const DURATION_OPTIONS = [10, 20, 30] as const;
+const LIMITED_PROFILES = RECOMMENDATION_PROFILES.filter(
+  (profile) => profile.evidenceLevel === 'limited',
+);
+const EXPERIMENTAL_PROFILES = RECOMMENDATION_PROFILES.filter(
+  (profile) => profile.evidenceLevel === 'experimental',
+);
 
 type PlayerPanelProps = {
-  profiles: RecommendationProfile[];
-  activeProfile: RecommendationProfile;
-  activeBaseToneHz: number;
   readyToStart: boolean;
   settings: SessionSettings;
   sessionState: SessionState;
   userContext: UserContext;
   onApplyProfile: (profileId: string) => void;
-  onStart: () => Promise<boolean>;
+  onStart: () => Promise<void>;
   onStop: () => Promise<void>;
   onUpdateSettings: (updates: Partial<SessionSettings>) => void;
   onResetCalibration: () => Promise<void>;
 };
 
 export function PlayerPanel({
-  profiles,
-  activeProfile,
-  activeBaseToneHz,
   readyToStart,
   settings,
   sessionState,
@@ -43,13 +43,7 @@ export function PlayerPanel({
   const [showExploratory, setShowExploratory] = useState(false);
   const canStart = readyToStart && sessionState.status === 'idle';
   const canStop = sessionState.status === 'running';
-  const { limitedProfiles, experimentalProfiles } = useMemo(
-    () => ({
-      limitedProfiles: profiles.filter((profile) => profile.evidenceLevel === 'limited'),
-      experimentalProfiles: profiles.filter((profile) => profile.evidenceLevel === 'experimental'),
-    }),
-    [profiles],
-  );
+  const activeProfile = getRecommendationProfile(settings.profileId);
 
   return (
     <section className={`panel player-panel session-${sessionState.status}`}>
@@ -112,7 +106,7 @@ export function PlayerPanel({
           </div>
           <div className="duration-chip">
             <span>基準音</span>
-            <strong>{activeBaseToneHz}Hz</strong>
+            <strong>{settings.carrierHz}Hz</strong>
           </div>
         </div>
       </div>
@@ -129,7 +123,7 @@ export function PlayerPanel({
         <div className="settings-grid">
           <div className="settings-column">
             <div className="preset-grid">
-              {limitedProfiles.map((profile) => (
+              {LIMITED_PROFILES.map((profile) => (
                 <button
                   key={profile.id}
                   className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
@@ -154,7 +148,7 @@ export function PlayerPanel({
 
             {showExploratory ? (
               <div className="exploratory-card">
-                {experimentalProfiles.map((profile) => (
+                {EXPERIMENTAL_PROFILES.map((profile) => (
                   <button
                     key={profile.id}
                     className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
@@ -191,8 +185,8 @@ export function PlayerPanel({
               <RangeControl
                 label="音量"
                 value={settings.masterVolume}
-                min={0.05}
-                max={0.9}
+                min={SESSION_LIMITS.masterVolume.min}
+                max={SESSION_LIMITS.masterVolume.max}
                 step={0.01}
                 displayValue={formatPercent(settings.masterVolume)}
                 onChange={(value) => onUpdateSettings({ masterVolume: value })}
@@ -215,8 +209,8 @@ export function PlayerPanel({
                   <RangeControl
                     label="基準音（詳細）"
                     value={settings.carrierHz}
-                    min={180}
-                    max={520}
+                    min={SESSION_LIMITS.carrierHz.min}
+                    max={SESSION_LIMITS.carrierHz.max}
                     step={10}
                     displayValue={`${settings.carrierHz}Hz`}
                     onChange={(value) => onUpdateSettings({ carrierHz: value })}
@@ -224,8 +218,8 @@ export function PlayerPanel({
                   <RangeControl
                     label="背景ノイズ"
                     value={settings.backgroundNoiseLevel}
-                    min={0}
-                    max={0.3}
+                    min={SESSION_LIMITS.backgroundNoiseLevel.min}
+                    max={SESSION_LIMITS.backgroundNoiseLevel.max}
                     step={0.01}
                     displayValue={formatPercent(settings.backgroundNoiseLevel)}
                     onChange={(value) => onUpdateSettings({ backgroundNoiseLevel: value })}
@@ -277,4 +271,23 @@ function RangeControl({ label, value, min, max, step, displayValue, onChange }: 
       />
     </label>
   );
+}
+
+function formatCountdown(milliseconds: number): string {
+  const totalSeconds = Math.ceil(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function formatPercent(value: number): string {
+  return `${Math.round(value * 100)}%`;
+}
+
+function formatOutputMode(value: UserContext['outputMode']): string {
+  return value === 'headphones' ? 'ヘッドホン' : 'スピーカー';
+}
+
+function formatSensitivity(value: UserContext['soundSensitivity']): string {
+  return value === 'sensitive' ? '音に敏感' : '標準';
 }

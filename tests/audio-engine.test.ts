@@ -3,15 +3,11 @@ import { IsochronicAudioEngine } from '../src/audio/engine';
 import type { SessionSettings } from '../src/features/session/types';
 
 const BASE_SETTINGS: SessionSettings = {
-  pulseHz: 40,
   carrierHz: 220,
   masterVolume: 0.24,
   durationMinutes: 20,
-  fadeInSec: 0,
-  fadeOutSec: 0,
   backgroundNoiseLevel: 0.025,
   profileId: 'recommended',
-  modulationStyle: 'sine',
 };
 
 class FakeAudioParam {
@@ -31,7 +27,6 @@ class FakeAudioWorkletNode {
   disconnect = vi.fn();
   parameters = new Map([
     ['carrierHz', new FakeAudioParam()],
-    ['pulseHz', new FakeAudioParam()],
     ['modulationMode', new FakeAudioParam()],
     ['noiseLevel', new FakeAudioParam()],
   ]);
@@ -76,8 +71,10 @@ describe('IsochronicAudioEngine', () => {
     await engine.start(BASE_SETTINGS);
 
     const carrierParam = lastWorkletNode?.parameters.get('carrierHz');
+    const modulationParam = lastWorkletNode?.parameters.get('modulationMode');
     const gainParam = lastGainNode?.gain;
     expect(carrierParam?.setValueAtTime).toHaveBeenCalledTimes(1);
+    expect(modulationParam?.setValueAtTime).toHaveBeenLastCalledWith(0, 1);
     expect(gainParam?.linearRampToValueAtTime).not.toHaveBeenCalled();
 
     engine.update({ durationMinutes: 30 });
@@ -89,6 +86,10 @@ describe('IsochronicAudioEngine', () => {
 
     expect(carrierParam?.setValueAtTime).toHaveBeenCalledTimes(2);
     expect(gainParam?.linearRampToValueAtTime).toHaveBeenCalledWith(0.3, 1.12);
+
+    engine.update({ profileId: 'exploratory' });
+
+    expect(modulationParam?.setValueAtTime).toHaveBeenLastCalledWith(1, 1);
 
     await engine.stop();
   });

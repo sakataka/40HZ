@@ -14,26 +14,19 @@ describe('session storage', () => {
   it('round-trips onboarding and calibration state via localStorage', () => {
     const preferences = {
       settings: {
-        pulseHz: 40 as const,
         carrierHz: 220,
         masterVolume: 0.21,
         durationMinutes: 20,
-        fadeInSec: 5,
-        fadeOutSec: 5,
         backgroundNoiseLevel: 0.03,
         profileId: 'recommended',
-        modulationStyle: 'sine' as const,
       },
-      acceptedSafetyNotice: true,
       userContext: {
         soundSensitivity: 'sensitive' as const,
         outputMode: 'headphones' as const,
         completedAt: 1000,
       },
       calibration: {
-        preferredBaseToneHz: 220,
         completedAt: 2000,
-        skipped: true,
       },
     };
 
@@ -46,26 +39,19 @@ describe('session storage', () => {
   it('hydrates stored preferences into normalized runtime values', () => {
     const hydrated = hydrateStoredPreferences({
       settings: {
-        pulseHz: 40 as const,
         carrierHz: 1000,
         masterVolume: 0.01,
         durationMinutes: 20,
-        fadeInSec: 0.5,
-        fadeOutSec: 12,
         backgroundNoiseLevel: -1,
         profileId: 'recommended',
-        modulationStyle: 'sine' as const,
       },
-      acceptedSafetyNotice: true,
       userContext: {
         soundSensitivity: 'sensitive' as const,
         outputMode: 'speaker' as const,
         completedAt: null,
       },
       calibration: {
-        preferredBaseToneHz: 10,
         completedAt: null,
-        skipped: false,
       },
     });
 
@@ -73,13 +59,10 @@ describe('session storage', () => {
       expect.objectContaining({
         carrierHz: 520,
         masterVolume: 0.05,
-        fadeInSec: 0,
-        fadeOutSec: 0,
         backgroundNoiseLevel: 0,
         profileId: 'recommended',
       }),
     );
-    expect(hydrated.calibration.preferredBaseToneHz).toBe(180);
   });
 
   it('keeps storage failures from escaping into the session flow', () => {
@@ -105,7 +88,6 @@ describe('session storage', () => {
       expect(() =>
         saveStoredPreferences({
           settings: fallbackPreferences.settings,
-          acceptedSafetyNotice: false,
           userContext: fallbackPreferences.userContext,
           calibration: fallbackPreferences.calibration,
         }),

@@ -59,7 +59,7 @@ The onboarding modal asks two questions before playback is enabled:
 - `Sound sensitivity`: `Standard` or `Sensitive`
 - `Listening setup`: `Headphones` or `Speakers`
 
-These inputs do not attempt to model age, sex, or other demographic variables. They are only used to choose conservative starting values for volume, fade length, and background noise level. The modal also presents the app's safety limitations before the user proceeds.
+These inputs do not attempt to model age, sex, or other demographic variables. They are only used to choose conservative starting values for volume and background noise level. The modal also presents the app's safety limitations before the user proceeds.
 
 ### Tone Check
 
@@ -82,7 +82,7 @@ The app exposes two primary modes and one optional exploratory mode:
 - `Recommended`
   Uses `sine`-style modulation with a standard 20-minute session and conservative starting defaults.
 - `Gentle`
-  Keeps the same general structure but lowers the starting volume and lengthens the fades.
+  Keeps the same general structure but lowers the starting volume.
 - `Exploratory`
   Uses a more pronounced `gated` pulse style and is hidden behind an explicit toggle.
 
@@ -99,32 +99,16 @@ The player shows:
 
 The session timer counts down during playback and stops the audio automatically when the selected duration ends.
 
-#### Listening guidance
-
-The `Best Practices` card keeps the guidance narrow and conditional:
-
-- begin in a quiet environment
-- keep the first session short
-- keep the volume clearly audible but comfortable
-- if comfortable, users may try listening with their eyes closed because some EEG studies reported stronger 40 Hz responses in lower-arousal conditions
-
-This guidance is presented as optional listening advice, not as a guaranteed way to improve outcomes.
-
 #### Basic controls
 
-Three sliders remain visible in the main control area:
-
-- `Volume`
-- `Fade`
-- `Background noise`
-
-`Fade` updates both fade-in and fade-out together. `Background noise` adjusts the generated pink-noise bed mixed behind the pulsed tone.
+The main control area keeps the session-length choices and `Volume` slider visible. `Background noise` and direct base-tone adjustment stay in the collapsed advanced section.
 
 ### Advanced settings
 
 The advanced section is collapsed by default. It contains:
 
 - `Base tone (advanced)`
+- `Background noise`
 - a short explanation that the app does not auto-adjust by age or sex
 - a button to run the tone check again
 
@@ -163,7 +147,7 @@ The current design is based on a small number of limited, human-facing reference
 That study informs two parts of the app:
 
 - the default `Recommended` mode uses a `sine`-style modulation profile
-- the app mentions eyes-closed listening only as an optional listening tip, not as a guarantee of a stronger or more useful effect
+- the evidence panel notes the eyes-closed result without treating it as a guarantee of a stronger or more useful effect
 
 The app does not treat this paper as proof of clinical benefit. It uses it only as a narrow cue for a conservative default mode.
 
@@ -187,7 +171,7 @@ That does not provide a direct parameter rule for this app, but it does support 
 
 - the app starts from relatively low volume defaults
 - the `Gentle` mode keeps a softer entry point
-- fades are treated as comfort features rather than evidence-backed treatment settings
+- low starting volume is treated as a comfort feature rather than an evidence-backed treatment setting
 
 In other words, the app borrows the comfort lesson, not a claim of efficacy.
 
@@ -212,7 +196,7 @@ The README therefore keeps several boundaries explicit:
 - this app is research-informed, not clinically validated
 - the presets are listening presets, not treatment modes
 - the tone check is a preference step, not a biomarker-driven calibration
-- comfort settings such as fades and low starting volume are usability choices, not evidence-backed therapeutic parameters
+- comfort settings such as low starting volume are usability choices, not evidence-backed therapeutic parameters
 
 ### How to read the source list in the app
 
@@ -220,7 +204,7 @@ The source list is intended to show where the app's framing comes from, not to i
 
 In practical terms:
 
-- the EEG entrainment paper informs the default pulse style and the optional eyes-closed note
+- the EEG entrainment paper informs the default pulse style and the eyes-closed note in the evidence panel
 - the audiovisual Alzheimer's study supports the broader research relevance of `40 Hz` sensory stimulation
 - the acceptability study supports a more conservative comfort posture for sound-based use
 - the lifespan review supports the decision to avoid demographic auto-tuning

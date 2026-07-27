@@ -1,20 +1,15 @@
 import {
-  DEFAULT_CALIBRATION,
   DEFAULT_USER_CONTEXT,
   deriveSessionSettings,
   mergeSessionSettings,
-  normalizeBaseToneHz,
 } from '../../lib/settings';
 import type { CalibrationResult, SessionSettings, UserContext } from './types';
 
 export type StoredSessionPreferences = {
   settings: SessionSettings;
-  acceptedSafetyNotice: boolean;
   userContext: UserContext;
   calibration: CalibrationResult;
 };
-
-export type HydratedSessionPreferences = StoredSessionPreferences;
 
 export const STORAGE_KEY = 'forty-hz-session-preferences';
 
@@ -49,18 +44,20 @@ export function saveStoredPreferences(preferences: StoredSessionPreferences): vo
 
 export function hydrateStoredPreferences(
   preferences: StoredSessionPreferences | null,
-): HydratedSessionPreferences {
+): StoredSessionPreferences {
   const userContext = normalizeUserContext(preferences?.userContext);
   const calibration = normalizeCalibration(preferences?.calibration);
   const storedSettings = preferences?.settings;
   const profileId = storedSettings?.profileId || 'recommended';
   const settings = storedSettings
-    ? mergeSessionSettings(deriveSessionSettings(profileId, userContext, calibration), storedSettings)
-    : deriveSessionSettings(profileId, userContext, calibration);
+    ? mergeSessionSettings(
+        deriveSessionSettings(profileId, userContext, storedSettings.carrierHz),
+        storedSettings,
+      )
+    : deriveSessionSettings(profileId, userContext);
 
   return {
     settings,
-    acceptedSafetyNotice: preferences?.acceptedSafetyNotice ?? false,
     userContext,
     calibration,
   };
@@ -78,8 +75,6 @@ function normalizeCalibration(
   value: Partial<CalibrationResult> | null | undefined,
 ): CalibrationResult {
   return {
-    preferredBaseToneHz: normalizeBaseToneHz(value?.preferredBaseToneHz),
     completedAt: value?.completedAt ?? null,
-    skipped: value?.skipped ?? false,
   };
 }

@@ -3,7 +3,6 @@ import { CalibrationModal } from './components/CalibrationModal';
 import { EvidencePanel } from './components/EvidencePanel';
 import { OnboardingModal } from './components/OnboardingModal';
 import { sharedAudioEngine, type AudioEngine } from './audio/engine';
-import { RECOMMENDATION_PROFILES } from './features/session/presets';
 import { useSession } from './features/session/useSession';
 
 type AppProps = {
@@ -12,8 +11,6 @@ type AppProps = {
 
 export default function App({ engine = sharedAudioEngine }: AppProps) {
   const {
-    activeProfile,
-    activeBaseToneHz,
     calibrationBusy,
     calibrationComplete,
     completeCalibration,
@@ -45,9 +42,6 @@ export default function App({ engine = sharedAudioEngine }: AppProps) {
       </section>
 
       <PlayerPanel
-        profiles={RECOMMENDATION_PROFILES}
-        activeProfile={activeProfile}
-        activeBaseToneHz={activeBaseToneHz}
         readyToStart={setupComplete && calibrationComplete}
         sessionState={sessionState}
         settings={settings}
@@ -70,8 +64,8 @@ export default function App({ engine = sharedAudioEngine }: AppProps) {
           busy={calibrationBusy}
           previewBaseToneHz={previewBaseToneHz}
           onPreview={previewCalibration}
-          onChoose={(carrierHz) => completeCalibration(carrierHz, false)}
-          onSkip={() => completeCalibration(220, true)}
+          onChoose={completeCalibration}
+          onSkip={() => completeCalibration(220)}
         />
       ) : null}
     </main>

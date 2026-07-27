@@ -9,7 +9,6 @@ function createMockEngine(overrides: Partial<AudioEngine> = {}): AudioEngine {
     start: vi.fn().mockResolvedValue(undefined),
     stop: vi.fn().mockResolvedValue(undefined),
     update: vi.fn(),
-    getState: vi.fn().mockReturnValue({ status: 'idle', lastReason: 'manual' }),
     ...overrides,
   };
 }
@@ -65,10 +64,10 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'スキップして 220 Hz を使う' }));
 
     await waitFor(() =>
-      expect(getStoredPreferences().calibration).toEqual(
+      expect(getStoredPreferences()).toEqual(
         expect.objectContaining({
-          preferredBaseToneHz: 220,
-          skipped: true,
+          calibration: { completedAt: expect.any(Number) },
+          settings: expect.objectContaining({ carrierHz: 220 }),
         }),
       ),
     );
@@ -180,7 +179,7 @@ describe('App', () => {
       await Promise.resolve();
     });
 
-    expect(engine.stop).toHaveBeenCalledWith('timer');
+    expect(engine.stop).toHaveBeenCalled();
     expect(screen.getByText('10:00')).toBeInTheDocument();
   });
 
@@ -287,10 +286,10 @@ describe('App', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'このトーンを使う' })[1]);
 
     await waitFor(() =>
-      expect(getStoredPreferences().calibration).toEqual(
+      expect(getStoredPreferences()).toEqual(
         expect.objectContaining({
-          preferredBaseToneHz: 440,
-          skipped: false,
+          calibration: { completedAt: expect.any(Number) },
+          settings: expect.objectContaining({ carrierHz: 440 }),
         }),
       ),
     );
@@ -337,7 +336,7 @@ describe('App', () => {
 
     fireEvent.click(screen.getAllByRole('button', { name: '試聴' })[0]);
 
-    await waitFor(() => expect(engine.stop).toHaveBeenCalledWith('manual'));
+    await waitFor(() => expect(engine.stop).toHaveBeenCalled());
     expect(engine.start).toHaveBeenCalledTimes(2);
     expect(screen.getByRole('button', { name: '試聴中' })).toBeInTheDocument();
   });
@@ -366,10 +365,10 @@ describe('App', () => {
     });
 
     await waitFor(() =>
-      expect(getStoredPreferences().calibration).toEqual(
+      expect(getStoredPreferences()).toEqual(
         expect.objectContaining({
-          preferredBaseToneHz: 220,
-          skipped: false,
+          calibration: { completedAt: expect.any(Number) },
+          settings: expect.objectContaining({ carrierHz: 220 }),
         }),
       ),
     );
@@ -417,27 +416,20 @@ describe('App', () => {
     window.localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
-        acceptedSafetyNotice: true,
         userContext: {
           soundSensitivity: 'sensitive',
           outputMode: 'speaker',
           completedAt: 1000,
         },
         calibration: {
-          preferredBaseToneHz: 10,
           completedAt: 2000,
-          skipped: false,
         },
         settings: {
-          pulseHz: 40,
           carrierHz: 1000,
           masterVolume: 0.01,
           durationMinutes: 20,
-          fadeInSec: 0.5,
-          fadeOutSec: 20,
           backgroundNoiseLevel: -1,
           profileId: 'recommended',
-          modulationStyle: 'sine',
         },
       }),
     );

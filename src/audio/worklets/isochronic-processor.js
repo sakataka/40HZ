@@ -2,7 +2,6 @@ class IsochronicProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
       { name: 'carrierHz', defaultValue: 220, minValue: 180, maxValue: 520 },
-      { name: 'pulseHz', defaultValue: 40, minValue: 40, maxValue: 40 },
       { name: 'modulationMode', defaultValue: 0, minValue: 0, maxValue: 1 },
       { name: 'noiseLevel', defaultValue: 0.08, minValue: 0, maxValue: 0.4 },
     ];
@@ -34,12 +33,11 @@ class IsochronicProcessor extends AudioWorkletProcessor {
 
     for (let i = 0; i < frames; i += 1) {
       const carrierHz = readParam(parameters.carrierHz, i);
-      const pulseHz = readParam(parameters.pulseHz, i);
       const modulationMode = readParam(parameters.modulationMode, i);
       const noiseLevel = readParam(parameters.noiseLevel, i);
 
       this.phase += carrierHz / sampleRateValue;
-      this.pulsePhase += pulseHz / sampleRateValue;
+      this.pulsePhase += 40 / sampleRateValue;
 
       if (this.phase >= 1) {
         this.phase -= 1;
