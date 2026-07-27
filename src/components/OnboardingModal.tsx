@@ -32,6 +32,7 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
             <label>
               <input
                 checked={soundSensitivity === 'standard'}
+                data-initial-focus
                 name="soundSensitivity"
                 type="radio"
                 onChange={() => setSoundSensitivity('standard')}

@@ -126,6 +126,7 @@ export function PlayerPanel({
               {LIMITED_PROFILES.map((profile) => (
                 <button
                   key={profile.id}
+                  aria-pressed={activeProfile.id === profile.id}
                   className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
                   type="button"
                   onClick={() => onApplyProfile(profile.id)}
@@ -141,16 +142,23 @@ export function PlayerPanel({
             </div>
 
             <div className="collapse-row">
-              <button className="inline-toggle" type="button" onClick={() => setShowExploratory((value) => !value)}>
+              <button
+                aria-controls="exploratory-settings"
+                aria-expanded={showExploratory}
+                className="inline-toggle"
+                type="button"
+                onClick={() => setShowExploratory((value) => !value)}
+              >
                 {showExploratory ? '試験的な設定を隠す' : '試験的な設定を表示'}
               </button>
             </div>
 
             {showExploratory ? (
-              <div className="exploratory-card">
+              <div className="exploratory-card" id="exploratory-settings">
                 {EXPERIMENTAL_PROFILES.map((profile) => (
                   <button
                     key={profile.id}
+                    aria-pressed={activeProfile.id === profile.id}
                     className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
                     type="button"
                     onClick={() => onApplyProfile(profile.id)}
@@ -172,6 +180,7 @@ export function PlayerPanel({
               {DURATION_OPTIONS.map((minutes) => (
                 <button
                   key={minutes}
+                  aria-pressed={settings.durationMinutes === minutes}
                   className={`duration-chip ${settings.durationMinutes === minutes ? 'duration-active' : ''}`}
                   type="button"
                   onClick={() => onUpdateSettings({ durationMinutes: minutes })}
@@ -195,6 +204,8 @@ export function PlayerPanel({
 
             <div className="collapse-row">
               <button
+                aria-controls="advanced-settings"
+                aria-expanded={showAdvanced}
                 className="inline-toggle"
                 type="button"
                 onClick={() => setShowAdvanced((value) => !value)}
@@ -204,7 +215,7 @@ export function PlayerPanel({
             </div>
 
             {showAdvanced ? (
-              <div className="advanced-card">
+              <div className="advanced-card" id="advanced-settings">
                 <div className="advanced-control-grid">
                   <RangeControl
                     label="基準音（詳細）"

@@ -2,8 +2,9 @@
 
 :root {
   color-scheme: dark;
-  font-family: "Yuji Boku", "Yu Gothic", "YuGothic", "Hiragino Kaku Gothic ProN", "Avenir Next", system-ui, sans-serif;
-  line-height: 1.5;
+  font-family: "Avenir Next", "Yu Gothic", "YuGothic", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
+  font-optical-sizing: auto;
+  line-height: 1.6;
   font-weight: 400;
   --ink-950: #030303;
   --ink-900: #090807;
@@ -12,8 +13,8 @@
   --line-dim: rgba(203, 171, 112, 0.18);
   --line-live: rgba(221, 59, 43, 0.5);
   --text-main: #eee4cf;
-  --text-muted: rgba(238, 228, 207, 0.72);
-  --text-faint: rgba(238, 228, 207, 0.5);
+  --text-muted: rgba(238, 228, 207, 0.78);
+  --text-faint: rgba(238, 228, 207, 0.58);
   --blood: #9f1d19;
   --blood-hot: #ff4b35;
   --copper: #9d7046;
@@ -33,11 +34,20 @@
   box-sizing: border-box;
 }
 
+html {
+  min-height: 100%;
+  background: var(--ink-950);
+  scrollbar-color: rgba(210, 160, 82, 0.42) rgba(7, 5, 4, 0.78);
+  scrollbar-width: thin;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
+  overscroll-behavior-y: none;
+  text-rendering: optimizeLegibility;
   background:
     linear-gradient(rgba(3, 3, 3, 0.66), rgba(3, 3, 3, 0.72)),
     url("../assets/atmosphere/ritual-tile.png"),
@@ -80,16 +90,20 @@ legend {
 button {
   cursor: pointer;
   border: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 a {
   color: #f2c15f;
   text-underline-offset: 0.18em;
+  text-decoration-thickness: 0.08em;
+  transition: color 140ms ease, text-decoration-color 140ms ease;
 }
 
 :focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 3px;
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
 }
 
 #root {
@@ -101,9 +115,12 @@ a {
 .app-shell {
   width: min(1160px, calc(100% - 28px));
   margin: 0 auto;
-  padding: 28px 0 48px;
+  padding: clamp(20px, 3vw, 32px) 0 clamp(44px, 6vw, 72px);
+}
+
+.app-content {
   display: grid;
-  gap: 18px;
+  gap: clamp(16px, 2.2vw, 22px);
 }
 
 .hero-card,
@@ -114,7 +131,7 @@ a {
   background:
     linear-gradient(180deg, rgba(255, 238, 198, 0.04), rgba(255, 255, 255, 0.006)),
     rgba(9, 7, 6, 0.92);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(10px);
   box-shadow:
     inset 0 1px 0 rgba(255, 238, 198, 0.04),
     0 24px 70px rgba(0, 0, 0, 0.62);
@@ -189,9 +206,11 @@ a {
 .section-label {
   margin: 0 0 10px;
   text-transform: uppercase;
-  letter-spacing: 0;
-  font-size: 0.72rem;
+  letter-spacing: 0.055em;
+  font-size: 0.74rem;
+  line-height: 1.4;
   color: var(--amber);
+  font-weight: 750;
 }
 
 .hero-card .eyebrow,
@@ -206,6 +225,7 @@ a {
   background: rgba(159, 29, 25, 0.2);
   color: #f0c26b;
   font-weight: 800;
+  letter-spacing: 0.045em;
   text-shadow: 0 0 18px rgba(255, 75, 53, 0.2);
 }
 
@@ -223,11 +243,13 @@ a {
   margin: 0;
   font-family: "Yuji Boku", "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", "Hiragino Mincho Pro", serif;
   font-weight: 700;
+  font-optical-sizing: auto;
 }
 
 .hero-card h1 {
   font-size: clamp(2rem, 4vw, 3.5rem);
   line-height: 0.98;
+  letter-spacing: -0.025em;
   max-width: 13ch;
   color: #fbf6e8;
   text-shadow:
@@ -239,6 +261,7 @@ a {
 .title-card h1 {
   font-size: clamp(2rem, 4vw, 3.5rem);
   line-height: 0.98;
+  letter-spacing: -0.025em;
   max-width: 18ch;
   color: #fbf6e8;
   overflow-wrap: anywhere;
@@ -255,8 +278,9 @@ a {
 .hero-copy,
 .title-copy {
   max-width: 35rem;
-  color: rgba(243, 238, 223, 0.8);
+  color: rgba(243, 238, 223, 0.86);
   font-size: 1.02rem;
+  line-height: 1.75;
 }
 
 .title-copy {
@@ -318,7 +342,7 @@ a {
 
 .panel {
   border-radius: 12px;
-  padding: 22px;
+  padding: clamp(20px, 2.6vw, 26px);
   position: relative;
   overflow: hidden;
 }
@@ -459,18 +483,7 @@ a {
     rgba(14, 10, 9, 0.86);
   color: var(--text-main);
   border: 1px solid var(--line-dim);
-  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
-}
-
-.preset-card:hover,
-.ghost-button:not(:disabled):hover,
-.duration-chip:hover,
-.inline-toggle:not(:disabled):hover {
-  transform: translateY(-1px);
-  border-color: var(--line-live);
-  box-shadow:
-    0 0 0 1px rgba(255, 75, 53, 0.1),
-    0 12px 28px rgba(0, 0, 0, 0.2);
+  transition: transform 120ms ease-out, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 
 .preset-card span {
@@ -498,6 +511,11 @@ a {
   box-shadow:
     inset 0 0 0 1px rgba(210, 160, 82, 0.14),
     0 0 24px rgba(159, 29, 25, 0.12);
+}
+
+.preset-card[aria-pressed="true"],
+.duration-chip[aria-pressed="true"] {
+  border-color: rgba(242, 193, 95, 0.62);
 }
 
 .evidence-pill {
@@ -530,7 +548,8 @@ a {
   border: 1px solid var(--line-dim);
   border-radius: 6px;
   padding: 10px 14px;
-  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+  min-height: 44px;
+  transition: transform 120ms ease-out, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 
 .exploratory-card,
@@ -657,6 +676,8 @@ a {
     inset 0 1px 0 rgba(255, 255, 255, 0.34),
     0 12px 28px rgba(217, 89, 55, 0.22),
     0 0 0 1px rgba(159, 29, 25, 0.22);
+  min-height: 44px;
+  transition: transform 120ms ease-out, filter 160ms ease, box-shadow 160ms ease;
 }
 
 .timer-strip .primary-button,
@@ -676,8 +697,9 @@ a {
 .primary-button:disabled,
 .ghost-button:disabled,
 .inline-toggle:disabled {
-  opacity: 0.5;
+  opacity: 0.46;
   cursor: not-allowed;
+  filter: saturate(0.55);
 }
 
 .duration-row,
@@ -784,7 +806,9 @@ a {
 
 .control-card input[type="range"] {
   width: 100%;
+  min-height: 28px;
   accent-color: var(--amber);
+  cursor: pointer;
 }
 
 .advanced-actions {
@@ -827,11 +851,13 @@ a {
     rgba(5, 4, 3, 0.86);
   z-index: 20;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: modal-backdrop-in 180ms ease-out both;
 }
 
 .modal-card {
   width: min(680px, calc(100vw - 32px));
-  max-height: min(820px, calc(100vh - 32px));
+  max-height: min(820px, calc(100dvh - 32px));
   min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
@@ -840,6 +866,9 @@ a {
   position: relative;
   overflow-wrap: anywhere;
   line-break: strict;
+  scrollbar-color: rgba(210, 160, 82, 0.5) rgba(7, 5, 4, 0.72);
+  scrollbar-gutter: stable;
+  animation: modal-card-in 200ms ease-out both;
 }
 
 .modal-grid {
@@ -885,6 +914,42 @@ a {
 
 .option-group input {
   accent-color: var(--amber);
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  a:hover {
+    color: #ffdaa0;
+  }
+
+  .preset-card:hover,
+  .ghost-button:not(:disabled):hover,
+  .duration-chip:hover,
+  .inline-toggle:not(:disabled):hover {
+    transform: translateY(-1px);
+    border-color: var(--line-live);
+    box-shadow:
+      0 0 0 1px rgba(255, 75, 53, 0.1),
+      0 12px 28px rgba(0, 0, 0, 0.2);
+  }
+
+  .primary-button:not(:disabled):hover {
+    filter: brightness(1.08) saturate(1.05);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.38),
+      0 14px 32px rgba(217, 89, 55, 0.28),
+      0 0 0 1px rgba(159, 29, 25, 0.28);
+  }
+}
+
+.preset-card:not(:disabled):active,
+.primary-button:not(:disabled):active,
+.ghost-button:not(:disabled):active,
+.duration-chip:not(:disabled):active,
+.inline-toggle:not(:disabled):active {
+  transform: translateY(1px) scale(0.985);
+  transition-duration: 70ms;
 }
 
 @keyframes pulse-column {
@@ -921,6 +986,19 @@ a {
   }
 }
 
+@keyframes modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes modal-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -929,6 +1007,40 @@ a {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+
+  .modal-card {
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .hero-card,
+  .title-card,
+  .panel,
+  .modal-card {
+    background-color: #0d0a08 !important;
+    background-image: none !important;
+    backdrop-filter: none;
+  }
+
+  .modal-backdrop {
+    background: rgba(3, 3, 3, 0.96);
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --line-dim: rgba(238, 228, 207, 0.38);
+    --text-muted: rgba(255, 248, 232, 0.9);
+    --text-faint: rgba(255, 248, 232, 0.76);
+  }
+
+  .hero-card,
+  .title-card,
+  .panel,
+  .modal-card {
+    border-color: rgba(242, 193, 95, 0.72);
   }
 }
 
@@ -960,7 +1072,7 @@ a {
 @media (max-width: 720px) {
   .app-shell {
     width: min(100% - 20px, 100%);
-    padding-top: 20px;
+    padding-top: 16px;
   }
 
   .hero-card,
@@ -973,6 +1085,7 @@ a {
 
   .modal-card {
     width: min(100%, calc(100vw - 20px));
+    max-height: calc(100dvh - 20px);
   }
 
   .hero-grid,
@@ -1006,5 +1119,31 @@ a {
 
   .modal-footer {
     align-items: stretch;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-card,
+  .title-card,
+  .panel {
+    padding: 18px;
+  }
+
+  .modal-backdrop {
+    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+  }
+
+  .modal-card {
+    width: 100%;
+    max-height: calc(100dvh - max(20px, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+    padding: 18px;
+  }
+
+  .context-chip-row .duration-chip {
+    flex: 1 1 calc(50% - 8px);
+  }
+
+  .source-list {
+    padding-left: 1rem;
   }
 }

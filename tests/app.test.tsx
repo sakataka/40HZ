@@ -77,13 +77,50 @@ describe('App', () => {
     const engine = createMockEngine();
     render(<App engine={engine} />);
 
-    expect(screen.getByRole('button', { name: 'セッション開始' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'セッション開始', hidden: true })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'この設定で進む' }));
 
-    expect(screen.getByRole('button', { name: 'セッション開始' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'セッション開始', hidden: true })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'スキップして 220 Hz を使う' }));
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'セッション開始' })).toBeEnabled());
+  });
+
+  it('keeps keyboard focus inside setup dialogs and restores it to session controls', async () => {
+    const engine = createMockEngine();
+    render(<App engine={engine} />);
+
+    const standardOption = screen.getByRole('radio', { name: '標準' });
+    expect(standardOption).toHaveFocus();
+    expect(screen.getByText('合法音響観測室 / non-medical').closest('.app-content')).toHaveAttribute(
+      'inert',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'この設定で進む' }));
+    await waitFor(() => expect(screen.getAllByRole('button', { name: '試聴' })[0]).toHaveFocus());
+
+    fireEvent.click(screen.getByRole('button', { name: 'スキップして 220 Hz を使う' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'セッション開始' })).toHaveFocus());
+    expect(screen.getByText('合法音響観測室 / non-medical').closest('.app-content')).not.toHaveAttribute(
+      'inert',
+    );
+  });
+
+  it('exposes selected settings and expandable sections to assistive technology', async () => {
+    const engine = createMockEngine();
+    render(<App engine={engine} />);
+    await finishSetup();
+
+    expect(screen.getByRole('button', { name: '20分' })).toHaveAttribute('aria-pressed', 'true');
+    const advancedToggle = screen.getByRole('button', { name: '詳細設定を表示' });
+    expect(advancedToggle).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(advancedToggle);
+
+    expect(screen.getByRole('button', { name: '詳細設定を隠す' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
   });
 
   it('keeps session start disabled while tone check is being rerun', async () => {
@@ -95,7 +132,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'トーンチェックをやり直す' }));
 
     await waitFor(() => expect(screen.getByRole('heading', { name: '220 Hz と 440 Hz を比べる' })).toBeInTheDocument());
-    expect(screen.getByRole('button', { name: 'セッション開始' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'セッション開始', hidden: true })).toBeDisabled();
   });
 
   it('uses more conservative defaults for sound-sensitive users', async () => {
@@ -139,6 +176,7 @@ describe('App', () => {
   it('shows evidence notes separating supported and exploratory guidance', async () => {
     const engine = createMockEngine();
     render(<App engine={engine} />);
+    await finishSetup();
 
     expect(screen.getByText('音だけの一般利用を裏づける証拠は限定的です')).toBeInTheDocument();
     expect(screen.getAllByText('限定的な人でのデータ').length).toBeGreaterThan(0);

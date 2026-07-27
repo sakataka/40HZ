@@ -4,8 +4,8 @@
   "description": "40 Hz のリスニングセッションを管理するブラウザアプリです。",
   "start_url": "/40HZ/",
   "display": "standalone",
-  "background_color": "#080a09",
-  "theme_color": "#101513",
+  "background_color": "#030303",
+  "theme_color": "#090807",
   "icons": [
     {
       "src": "/40HZ/icon.svg",
