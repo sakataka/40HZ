@@ -2,10 +2,13 @@
 
 :root {
   color-scheme: dark;
-  font-family: "Avenir Next", "Yu Gothic", "YuGothic", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
+  --font-ritual: "Yuji Boku", "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", "Hiragino Mincho Pro", serif;
+  --font-text: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", "Hiragino Mincho Pro", serif;
+  --font-readout: "Avenir Next Condensed", "DIN Alternate", "Roboto Condensed", ui-monospace, monospace;
+  font-family: var(--font-text);
   font-optical-sizing: auto;
-  line-height: 1.6;
-  font-weight: 400;
+  line-height: 1.68;
+  font-weight: 500;
   --ink-950: #030303;
   --ink-900: #090807;
   --ink-850: #100d0b;
@@ -94,6 +97,8 @@ button {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  font-weight: 650;
+  letter-spacing: 0.018em;
 }
 
 a {
@@ -248,7 +253,7 @@ a {
 .modal-card h2,
 .section-head h3 {
   margin: 0;
-  font-family: "Yuji Boku", "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", "Hiragino Mincho Pro", serif;
+  font-family: var(--font-ritual);
   font-weight: 700;
   font-optical-sizing: auto;
 }
@@ -302,7 +307,8 @@ a {
   max-width: 35rem;
   color: rgba(243, 238, 223, 0.86);
   font-size: 1.02rem;
-  line-height: 1.75;
+  line-height: 1.86;
+  letter-spacing: 0.012em;
 }
 
 .title-copy {
@@ -505,6 +511,7 @@ a {
     rgba(14, 10, 9, 0.86);
   color: var(--text-main);
   border: 1px solid var(--line-dim);
+  letter-spacing: 0.008em;
   position: relative;
   overflow: hidden;
   box-shadow: inset 0 1px 0 rgba(255, 238, 198, 0.035);
@@ -530,6 +537,7 @@ a {
   display: block;
   margin-top: 6px;
   color: var(--text-muted);
+  line-height: 1.72;
 }
 
 .preset-active {
@@ -650,8 +658,10 @@ a {
 }
 
 .timer-strip strong {
+  font-family: var(--font-readout);
   font-size: clamp(2.4rem, 5vw, 4.2rem);
   line-height: 0.88;
+  letter-spacing: -0.025em;
   color: #fff8e8;
   font-variant-numeric: tabular-nums;
   text-shadow:
@@ -810,7 +820,7 @@ a {
 .context-chip-row .duration-chip strong {
   color: rgba(231, 236, 226, 0.74);
   font-size: 0.94rem;
-  font-weight: 700;
+  font-weight: 750;
 }
 
 .stop-button:not(:disabled) {
@@ -902,7 +912,8 @@ a {
   margin: 10px 0 6px;
   color: #fff1d3;
   line-height: 1.48;
-  letter-spacing: -0.008em;
+  letter-spacing: 0.006em;
+  font-weight: 750;
 }
 
 .sources-card {
@@ -1258,6 +1269,6 @@ a {
   .title-copy,
   .hero-copy {
     font-size: 0.98rem;
-    line-height: 1.72;
+    line-height: 1.82;
   }
 }
