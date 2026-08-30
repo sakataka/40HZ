@@ -25,6 +25,10 @@ bun run test
 bun run build
 ```
 
+`bun run build` creates the root-relative build served by LocalWeb at
+`http://40hz.localhost/`. The GitHub Pages workflow uses `bun run build:pages`
+to create the `/40HZ/`-prefixed deployment build.
+
 ### Basic runtime notes
 
 - Audio playback starts only after a user gesture, which is required by browser audio policies.
