@@ -7,8 +7,7 @@ import type {
 import { getRecommendationProfile, RECOMMENDATION_PROFILES } from '../features/session/presets';
 import { SESSION_LIMITS } from '../lib/settings';
 
-const SIGNAL_BAR_INDICES = Array.from({ length: 11 }, (_, index) => index);
-const DURATION_OPTIONS = [10, 20, 30] as const;
+const DURATION_OPTIONS = [10, 15, 20, 30] as const;
 const LIMITED_PROFILES = RECOMMENDATION_PROFILES.filter(
   (profile) => profile.evidenceLevel === 'limited',
 );
@@ -48,18 +47,10 @@ export function PlayerPanel({
   return (
     <section className={`panel player-panel session-${sessionState.status}`}>
       <div className="panel-header">
-        <div>
-          <p className="section-label">運用制御</p>
-          <h2>照射許可と遮断</h2>
-        </div>
-      </div>
-
-      <div className="panel-signal-row">
-        <div className="signal-visualizer" aria-hidden="true">
-          {SIGNAL_BAR_INDICES.map((index) => (
-            <span key={index} />
-          ))}
-        </div>
+        <h2>プレーヤー</h2>
+        <span className={`playback-status ${canStop ? 'is-playing' : ''}`} role="status">
+          {({ idle: '停止中', starting: '準備中', running: '再生中', stopping: '停止しています' })[sessionState.status]}
+        </span>
       </div>
 
       <div className="playback-console">
@@ -72,7 +63,7 @@ export function PlayerPanel({
               onClick={() => void onStart()}
               disabled={!canStart}
             >
-              セッション開始
+              再生
             </button>
             <button
               aria-label="停止"
@@ -85,15 +76,15 @@ export function PlayerPanel({
             </button>
           </div>
           <div className="timer-readout">
-            <span>残り滞在時間</span>
+            <span>{canStop ? '残り時間' : '再生時間'}</span>
             <strong>{formatCountdown(sessionState.remainingMs)}</strong>
           </div>
         </div>
 
-        <p className="context-label">現在の許可条件</p>
+
         <div className="context-chip-row" aria-label="現在の設定">
           <div className="duration-chip">
-            <span>プロトコル</span>
+            <span>プリセット</span>
             <strong>{activeProfile.label}</strong>
           </div>
           <div className="duration-chip">
@@ -114,10 +105,9 @@ export function PlayerPanel({
       <div className="settings-section">
         <div className="section-head">
           <div>
-            <p className="section-label">許容範囲</p>
-            <h3>稼働中も触れるつまみ</h3>
+            <h3>再生設定</h3>
           </div>
-          <p>気分が悪い、めまい、頭痛、妙な圧迫感があれば即時遮断してください。</p>
+          <p>プリセットと時間は停止中に変更できます。</p>
         </div>
 
         <div className="settings-grid">
@@ -129,13 +119,14 @@ export function PlayerPanel({
                   aria-pressed={activeProfile.id === profile.id}
                   className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
                   type="button"
+                  disabled={sessionState.status !== 'idle'}
                   onClick={() => onApplyProfile(profile.id)}
                 >
                   <div className="preset-head">
                     <span>{profile.label}</span>
-                    <small className="evidence-pill evidence-limited">限定的な人でのデータ</small>
+
                   </div>
-                  <strong>{profile.summary}</strong>
+
                   <small>{profile.description}</small>
                 </button>
               ))}
@@ -161,13 +152,14 @@ export function PlayerPanel({
                     aria-pressed={activeProfile.id === profile.id}
                     className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
                     type="button"
+                    disabled={sessionState.status !== 'idle'}
                     onClick={() => onApplyProfile(profile.id)}
                   >
                     <div className="preset-head">
                       <span>{profile.label}</span>
                       <small className="evidence-pill evidence-experimental">試験的</small>
                     </div>
-                    <strong>{profile.summary}</strong>
+
                     <small>{profile.description}</small>
                   </button>
                 ))}
@@ -176,6 +168,7 @@ export function PlayerPanel({
           </div>
 
           <div className="settings-column">
+            <p className="control-label">タイマー</p>
             <div className="duration-row" role="group" aria-label="セッションの長さ">
               {DURATION_OPTIONS.map((minutes) => (
                 <button
@@ -183,6 +176,7 @@ export function PlayerPanel({
                   aria-pressed={settings.durationMinutes === minutes}
                   className={`duration-chip ${settings.durationMinutes === minutes ? 'duration-active' : ''}`}
                   type="button"
+                  disabled={sessionState.status !== 'idle'}
                   onClick={() => onUpdateSettings({ durationMinutes: minutes })}
                 >
                   {minutes}分
@@ -210,7 +204,7 @@ export function PlayerPanel({
                 type="button"
                 onClick={() => setShowAdvanced((value) => !value)}
               >
-                {showAdvanced ? '詳細設定を隠す' : '詳細設定を表示'}
+                {showAdvanced ? 'チューニングを閉じる' : 'チューニング'}
               </button>
             </div>
 
@@ -218,7 +212,7 @@ export function PlayerPanel({
               <div className="advanced-card" id="advanced-settings">
                 <div className="advanced-control-grid">
                   <RangeControl
-                    label="基準音（詳細）"
+                    label="音の高さ"
                     value={settings.carrierHz}
                     min={SESSION_LIMITS.carrierHz.min}
                     max={SESSION_LIMITS.carrierHz.max}
@@ -239,9 +233,9 @@ export function PlayerPanel({
 
                 <div className="advanced-actions">
                   <p>
-                    年齢や性別による自動調整は行いません。トーンチェックは、この機器と聞こえ方に合わせるための簡易確認です。
+                    脈動は40 Hz固定です。音の高さと背景ノイズは再生中も調整できます。
                   </p>
-                  <button className="ghost-button" type="button" onClick={() => void onResetCalibration()}>
+                  <button className="ghost-button" type="button" disabled={sessionState.status !== 'idle'} onClick={() => void onResetCalibration()}>
                     トーンチェックをやり直す
                   </button>
                 </div>
@@ -250,6 +244,7 @@ export function PlayerPanel({
           </div>
         </div>
       </div>
+      <p className="player-note">小さな音量から始め、不快に感じたら停止してください。</p>
     </section>
   );
 }

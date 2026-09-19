@@ -1,11 +1,11 @@
 {
-  "name": "40 Hz セッション制御盤",
-  "short_name": "40 Hz 制御盤",
+  "name": "40 Hz Audio",
+  "short_name": "40 Hz",
   "description": "40 Hz のリスニングセッションを管理するブラウザアプリです。",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#030303",
-  "theme_color": "#090807",
+  "background_color": "#fafafa",
+  "theme_color": "#fafafa",
   "icons": [
     {
       "src": "icon.svg",

@@ -107,16 +107,13 @@ export default function App({ engine = sharedAudioEngine }: AppProps) {
   return (
     <main className="app-shell">
       <div className="app-content" aria-hidden={modalOpen || undefined} inert={modalOpen}>
-        <section className="title-card" aria-labelledby="app-title">
-          <p className="eyebrow">合法音響観測室 / non-medical</p>
-          <h1 id="app-title">
-            40 Hz
-            <span>灰色聴取プロトコル</span>
-          </h1>
-          <p className="title-copy">
-            治療ではない、保証もしない。ただ 40 Hz の脈動を、静かな部屋で慎重に扱うための制御盤です。
-          </p>
-        </section>
+        <header className="app-header">
+          <div>
+            <h1 id="app-title">40 Hz <span>Audio</span></h1>
+            <p>音を流す。好みに合わせて調整する。</p>
+          </div>
+          <span className="header-note">音声プレーヤー</span>
+        </header>
 
         <PlayerPanel
           readyToStart={setupComplete && calibrationComplete}

@@ -1,12 +1,8 @@
 export function EvidencePanel() {
   return (
-    <section className="panel">
-      <div className="panel-header">
-        <div>
-          <p className="section-label">免責と出典</p>
-          <h2>合法だが、効能は売らない</h2>
-        </div>
-      </div>
+    <details className="panel evidence-panel">
+      <summary>このアプリについて・参考資料</summary>
+      <p>40 Hzの脈動音を再生するアプリです。医療機器ではなく、治療や効果を保証するものではありません。</p>
 
       <div className="evidence-grid">
         <article className="evidence-card">
@@ -67,6 +63,6 @@ export function EvidencePanel() {
           </li>
         </ul>
       </div>
-    </section>
+    </details>
   );
 }

@@ -24,7 +24,7 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="setup-title">
       <div className="modal-card">
-        <p className="section-label">入室前確認</p>
+        <p className="section-label">初回設定</p>
         <h2 id="setup-title">最初に2つだけ確認します</h2>
         <div className="modal-grid">
           <fieldset className="option-group">

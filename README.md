@@ -54,7 +54,7 @@ The first screen provides a short summary of the current session state. It shows
 - the selected listening mode
 - the selected listening setup
 
-The hero text deliberately keeps the framing narrow. It states that the app uses conservative defaults informed by limited human EEG and acceptability findings, together with a brief listening check.
+The interface uses a neutral LocalWeb-style palette, follows the system light/dark appearance, and focuses on playback and tuning. Research notes and source links are collapsed under the player.
 
 ### Before You Start
 
@@ -99,7 +99,7 @@ The player shows:
 - `Time left`
 - `Start session`
 - `Stop`
-- session-length chips for `10 min`, `20 min`, and `30 min`
+- session-length chips for `10 min`, `15 min`, `20 min`, and `30 min`
 
 The session timer counts down during playback and stops the audio automatically when the selected duration ends.
 
@@ -107,13 +107,15 @@ The session timer counts down during playback and stops the audio automatically 
 
 The main control area keeps the session-length choices and `Volume` slider visible. `Background noise` and direct base-tone adjustment stay in the collapsed advanced section.
 
+Presets, timer duration, and tone checks can be changed while stopped. Volume, base tone, and background noise can be adjusted during playback.
+
 ### Advanced settings
 
 The advanced section is collapsed by default. It contains:
 
-- `Base tone (advanced)`
+- `Tone pitch`
 - `Background noise`
-- a short explanation that the app does not auto-adjust by age or sex
+- a reminder that the pulse rate stays fixed at 40 Hz
 - a button to run the tone check again
 
 This keeps direct base-tone editing available without making it part of the primary workflow.

@@ -92,7 +92,7 @@ describe('App', () => {
 
     const standardOption = screen.getByRole('radio', { name: '標準' });
     expect(standardOption).toHaveFocus();
-    expect(screen.getByText('合法音響観測室 / non-medical').closest('.app-content')).toHaveAttribute(
+    expect(screen.getByText('音を流す。好みに合わせて調整する。').closest('.app-content')).toHaveAttribute(
       'inert',
     );
 
@@ -101,7 +101,7 @@ describe('App', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'スキップして 220 Hz を使う' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'セッション開始' })).toHaveFocus());
-    expect(screen.getByText('合法音響観測室 / non-medical').closest('.app-content')).not.toHaveAttribute(
+    expect(screen.getByText('音を流す。好みに合わせて調整する。').closest('.app-content')).not.toHaveAttribute(
       'inert',
     );
   });
@@ -112,12 +112,12 @@ describe('App', () => {
     await finishSetup();
 
     expect(screen.getByRole('button', { name: '20分' })).toHaveAttribute('aria-pressed', 'true');
-    const advancedToggle = screen.getByRole('button', { name: '詳細設定を表示' });
+    const advancedToggle = screen.getByRole('button', { name: 'チューニング' });
     expect(advancedToggle).toHaveAttribute('aria-expanded', 'false');
 
     fireEvent.click(advancedToggle);
 
-    expect(screen.getByRole('button', { name: '詳細設定を隠す' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'チューニングを閉じる' })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
@@ -128,7 +128,7 @@ describe('App', () => {
     render(<App engine={engine} />);
     await finishSetup();
 
-    fireEvent.click(screen.getByRole('button', { name: '詳細設定を表示' }));
+    fireEvent.click(screen.getByRole('button', { name: 'チューニング' }));
     fireEvent.click(screen.getByRole('button', { name: 'トーンチェックをやり直す' }));
 
     await waitFor(() => expect(screen.getByRole('heading', { name: '220 Hz と 440 Hz を比べる' })).toBeInTheDocument());
@@ -145,7 +145,7 @@ describe('App', () => {
 
     await waitFor(() => expect(screen.getByText('19%')).toBeInTheDocument());
     expect(screen.queryByText('5.0秒')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '詳細設定を表示' }));
+    fireEvent.click(screen.getByRole('button', { name: 'チューニング' }));
     expect(screen.queryByText('5.0秒')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('フェード')).not.toBeInTheDocument();
   });
@@ -164,11 +164,11 @@ describe('App', () => {
       await Promise.resolve();
     });
 
-    expect(screen.queryByLabelText('基準音（詳細）')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('音の高さ')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('背景ノイズ')).not.toBeInTheDocument();
     expect(screen.getByLabelText('音量')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '詳細設定を表示' }));
-    expect(screen.getByLabelText('基準音（詳細）')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'チューニング' }));
+    expect(screen.getByLabelText('音の高さ')).toBeInTheDocument();
     expect(screen.queryByLabelText('フェード')).not.toBeInTheDocument();
     expect(screen.getByLabelText('背景ノイズ')).toBeInTheDocument();
   });
@@ -243,7 +243,7 @@ describe('App', () => {
       await deferredStart.promise;
     });
 
-    expect(screen.queryByText('再生中')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('再生中');
   });
 
   it('returns to a safe idle state when engine start fails', async () => {
@@ -274,7 +274,7 @@ describe('App', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: '停止' })).toBeEnabled());
 
     fireEvent.click(screen.getByRole('button', { name: '停止' }));
-    expect(screen.queryByText('停止中')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('停止しています');
     fireEvent.click(screen.getByRole('button', { name: '停止' }));
 
     expect(engine.stop).toHaveBeenCalledTimes(1);
@@ -294,8 +294,8 @@ describe('App', () => {
 
     expect(screen.getByText('220Hz')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: '詳細設定を表示' }));
-    fireEvent.change(screen.getByLabelText('基準音（詳細）'), {
+    fireEvent.click(screen.getByRole('button', { name: 'チューニング' }));
+    fireEvent.change(screen.getByLabelText('音の高さ'), {
       target: { value: '300' },
     });
 
@@ -317,7 +317,7 @@ describe('App', () => {
     render(<App engine={engine} />);
     await finishSetup();
 
-    fireEvent.click(screen.getByRole('button', { name: '詳細設定を表示' }));
+    fireEvent.click(screen.getByRole('button', { name: 'チューニング' }));
     fireEvent.click(screen.getByRole('button', { name: 'トーンチェックをやり直す' }));
 
     await waitFor(() => expect(screen.getByRole('heading', { name: '220 Hz と 440 Hz を比べる' })).toBeInTheDocument());
@@ -333,7 +333,7 @@ describe('App', () => {
     );
 
     expect(screen.getAllByText('440Hz').length).toBeGreaterThan(0);
-    await waitFor(() => expect(screen.getByLabelText('基準音（詳細）')).toHaveValue('440'));
+    await waitFor(() => expect(screen.getByLabelText('音の高さ')).toHaveValue('440'));
   });
 
   it('only starts one calibration preview while a preview transition is in flight', async () => {
@@ -435,7 +435,7 @@ describe('App', () => {
     render(<App engine={engine} />);
     await finishSetup();
 
-    fireEvent.click(screen.getByRole('button', { name: '詳細設定を表示' }));
+    fireEvent.click(screen.getByRole('button', { name: 'チューニング' }));
     fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
     fireEvent.click(screen.getByRole('button', { name: 'トーンチェックをやり直す' }));
 
@@ -448,6 +448,23 @@ describe('App', () => {
     });
 
     expect(screen.getByRole('button', { name: '停止' })).toBeEnabled();
+  });
+
+  it('locks timer, presets and tone check during playback while allowing live tuning', async () => {
+    const engine = createMockEngine();
+    render(<App engine={engine} />);
+    await finishSetup();
+    fireEvent.click(screen.getByRole('button', { name: 'チューニング', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('再生中'));
+    expect(screen.getByRole('button', { name: '10分' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /やさしめ/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'トーンチェックをやり直す' })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('音の高さ'), { target: { value: '300' } });
+    await waitFor(() => expect(engine.update).toHaveBeenCalledWith(expect.objectContaining({ carrierHz: 300 })));
+    fireEvent.click(screen.getByRole('button', { name: '停止' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: '10分' })).toBeEnabled());
+    expect(screen.getByRole('button', { name: 'トーンチェックをやり直す' })).toBeEnabled();
   });
 
   it('hydrates persisted settings into a consistent state', async () => {
@@ -477,7 +494,7 @@ describe('App', () => {
 
     expect(screen.getAllByText('520Hz').length).toBeGreaterThan(0);
     expect(screen.getByText('5%')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '詳細設定を表示' }));
+    fireEvent.click(screen.getByRole('button', { name: 'チューニング' }));
     expect(screen.queryByText('1.0秒')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('フェード')).not.toBeInTheDocument();
     expect(screen.getAllByText('スピーカー').length).toBeGreaterThan(0);
