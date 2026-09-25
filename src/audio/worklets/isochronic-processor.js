@@ -1,7 +1,9 @@
 // program: 0 = 40 Hz pulses, 1 = breath guide, 2 = noise only.
 // modulationMode: 0 = sine, 1 = gated, 2 = aperiodic pulses with a 25 ms mean interval (blind sham).
-// noiseColor: 0 = pink, 1 = brown, 2 = ocean swell.
+// noiseColor: 0 = pink, 1 = brown, 2 = ocean swell, 3 = rain, 4 = wind, 5 = fire.
 const OCEAN_SWELL_SEC = 9;
+const RAIN_DROPS_PER_SEC = 45;
+const FIRE_CRACKLES_PER_SEC = 3;
 const INHALE_PEAK_WITH_TOP_UP = 0.8;
 
 class IsochronicProcessor extends AudioWorkletProcessor {
@@ -11,7 +13,7 @@ class IsochronicProcessor extends AudioWorkletProcessor {
       { name: 'modulationMode', defaultValue: 0, minValue: 0, maxValue: 2 },
       { name: 'noiseLevel', defaultValue: 0.08, minValue: 0, maxValue: 0.4 },
       { name: 'program', defaultValue: 0, minValue: 0, maxValue: 2 },
-      { name: 'noiseColor', defaultValue: 0, minValue: 0, maxValue: 2 },
+      { name: 'noiseColor', defaultValue: 0, minValue: 0, maxValue: 5 },
       { name: 'inhaleSec', defaultValue: 4.5, minValue: 1, maxValue: 12 },
       { name: 'topUpSec', defaultValue: 0, minValue: 0, maxValue: 4 },
       { name: 'exhaleSec', defaultValue: 6.5, minValue: 1, maxValue: 12 },
@@ -33,6 +35,18 @@ class IsochronicProcessor extends AudioWorkletProcessor {
     this.b4 = 0;
     this.b5 = 0;
     this.b6 = 0;
+    const rate = globalThis.sampleRate ?? 48000;
+    this.dropDecay = Math.exp(-1 / (0.012 * rate));
+    this.crackleDecay = Math.exp(-1 / (0.004 * rate));
+    this.dropEnv = 0;
+    this.dropLp = 0;
+    this.hissLp = 0;
+    this.windLp1 = 0;
+    this.windLp2 = 0;
+    this.crackleEnv = 0;
+    this.crackleLp = 0;
+    this.crackleBurst = 0;
+    this.crackleGap = 0;
   }
 
   process(_inputs, outputs, parameters) {
@@ -55,7 +69,7 @@ class IsochronicProcessor extends AudioWorkletProcessor {
       if (program === 1) {
         sample = this.breathSample(parameters, i, seconds, noiseLevel, sampleRateValue);
       } else if (program === 2) {
-        sample = this.noiseSample(Math.round(readParam(parameters.noiseColor, i)), seconds);
+        sample = this.noiseSample(Math.round(readParam(parameters.noiseColor, i)), seconds, sampleRateValue);
       } else {
         sample = this.pulseSample(parameters, i, noiseLevel, sampleRateValue);
       }
@@ -110,7 +124,7 @@ class IsochronicProcessor extends AudioWorkletProcessor {
     return tone + wind;
   }
 
-  noiseSample(noiseColor, seconds) {
+  noiseSample(noiseColor, seconds, sampleRateValue) {
     const pink = this.createPinkNoise();
     if (noiseColor === 0) {
       return pink * 1.6;
@@ -123,8 +137,71 @@ class IsochronicProcessor extends AudioWorkletProcessor {
       return brown;
     }
 
+    if (noiseColor === 3) {
+      return this.rainSample(white, pink, brown, sampleRateValue);
+    }
+
+    if (noiseColor === 4) {
+      return this.windSample(white, seconds);
+    }
+
+    if (noiseColor === 5) {
+      return this.fireSample(white, brown, seconds, sampleRateValue);
+    }
+
     const swell = 0.5 - 0.5 * Math.cos((seconds / OCEAN_SWELL_SEC) * Math.PI * 2);
     return brown * (0.45 + 0.9 * swell ** 1.6) + pink * 0.35 * swell;
+  }
+
+  rainSample(white, pink, brown, sampleRateValue) {
+    // Steady hiss plus short, randomly timed droplets.
+    this.hissLp += 0.3 * (white - this.hissLp);
+    const hiss = white - this.hissLp;
+
+    if (Math.random() < RAIN_DROPS_PER_SEC / sampleRateValue) {
+      this.dropEnv = 0.25 + Math.random() * 0.75;
+    }
+    this.dropEnv *= this.dropDecay;
+    this.dropLp += 0.45 * (white - this.dropLp);
+
+    return pink * 1.1 + hiss * 0.18 + brown * 0.25 + this.dropLp * this.dropEnv * 0.9;
+  }
+
+  windSample(white, seconds) {
+    // Two slow, non-repeating gust cycles open and close a low-pass filter.
+    const gust = Math.min(
+      1,
+      Math.max(
+        0,
+        0.5 + 0.3 * Math.sin((seconds / 11) * Math.PI * 2) + 0.2 * Math.sin((seconds / 4.7) * Math.PI * 2 + 1.3),
+      ),
+    );
+    const coefficient = 0.004 + 0.03 * gust * gust;
+    this.windLp1 += coefficient * (white - this.windLp1);
+    this.windLp2 += coefficient * (this.windLp1 - this.windLp2);
+    return this.windLp2 * (3.6 + 6 * gust);
+  }
+
+  fireSample(white, brown, seconds, sampleRateValue) {
+    // Low roar with occasional crackles that sometimes come in quick clusters.
+    if (this.crackleGap > 0) {
+      this.crackleGap -= 1;
+      if (this.crackleGap === 0 && this.crackleBurst > 0) {
+        this.crackleBurst -= 1;
+        this.crackleEnv = 0.3 + Math.random() * 0.5;
+        this.crackleGap = this.crackleBurst > 0 ? Math.round(sampleRateValue * (0.02 + Math.random() * 0.08)) : 0;
+      }
+    } else if (Math.random() < FIRE_CRACKLES_PER_SEC / sampleRateValue) {
+      this.crackleEnv = 0.5 + Math.random() * 0.5;
+      this.crackleBurst = Math.random() < 0.4 ? 1 + Math.floor(Math.random() * 4) : 0;
+      this.crackleGap = this.crackleBurst > 0 ? Math.round(sampleRateValue * (0.02 + Math.random() * 0.08)) : 0;
+    }
+    this.crackleEnv *= this.crackleDecay;
+    this.crackleLp += 0.5 * (white - this.crackleLp);
+    const crackle = (white - this.crackleLp) * this.crackleEnv;
+
+    const flicker = 0.8 + 0.2 * Math.sin((seconds / 3.1) * Math.PI * 2);
+    return brown * 1.1 * flicker + crackle * 1.4;
   }
 
   advanceCarrier(carrierHz, sampleRateValue) {

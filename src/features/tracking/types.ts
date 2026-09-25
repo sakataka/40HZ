@@ -36,6 +36,7 @@ export type TrackingPrefs = {
 };
 
 export type TrackingData = {
+  prefsVersion?: number;
   prefs: TrackingPrefs;
   records: SessionRecord[];
   experimentQueue: BlindCondition[];

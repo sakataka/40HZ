@@ -243,9 +243,16 @@ export function useSession(engine: AudioEngine, { onSessionEnd }: UseSessionOpti
   }
 
   function applyProfile(profileId: string): void {
-    setSettings(
-      deriveSessionSettings(profileId, userContextRef.current, settingsRef.current.carrierHz),
-    );
+    const current = settingsRef.current;
+    const derived = deriveSessionSettings(profileId, userContextRef.current, current.carrierHz);
+    // Mid-playback switches keep the running timer and the volume the listener chose.
+    const next = sessionStateRef.current.status === 'idle'
+      ? derived
+      : { ...derived, durationMinutes: current.durationMinutes, masterVolume: current.masterVolume };
+
+    // Sync the ref now so a start triggered in the same click plays the new sound.
+    settingsRef.current = next;
+    setSettings(next);
   }
 
   function completeOnboarding(nextContext: Omit<UserContext, 'completedAt'>): void {

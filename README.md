@@ -1,6 +1,6 @@
 # 40Hz Audio Sessions
 
-This project is a browser-based React and Vite app for short "brain reset" audio sessions: 40 Hz isochronic pulses, paced-breathing guides, and masking noise. Each program is labelled by strength of evidence, and the app can record before/after check-ins and run blinded self-experiments (40 Hz vs. an aperiodic sham) so the user can test what actually works for them. It is intended as a research-informed tool for general adult self-use. It is not presented as a medical device, a treatment, or a clinically validated intervention.
+This project is a browser-based React and Vite app for short "brain reset" audio sessions: 40 Hz isochronic pulses, paced-breathing guides, and masking noise. Each program is labelled by strength of evidence, and the app can optionally record before/after check-ins and run blinded self-experiments (40 Hz vs. an aperiodic sham) so the user can test what actually works for them. It is intended as a research-informed tool for general adult self-use. It is not presented as a medical device, a treatment, or a clinically validated intervention.
 
 ## Getting Started
 
@@ -77,21 +77,31 @@ The tone check is a listener-preference shortcut. It is intended to help the use
 
 ### Main player controls
 
-The main control panel is organized around simple playback controls.
+The main control panel is built for "pick a sound and listen". Tapping any sound card starts it right away. While playing, tapping another card crossfades to it (keeping the running timer and volume), and tapping the playing card stops it. Nothing is measured or recorded unless the user turns recording on.
 
-#### Programs
+#### Suggestion for now
 
-Presets are grouped by program, and each group shows an evidence label:
+A small strip above the library suggests two sounds for the local time of day (morning: resonance breathing / 40 Hz, daytime: pink noise / rain, evening: cyclic sighing / ocean, late night: bedtime breathing / fire). Each suggestion plays with one tap. It is a static rule based on the clock, not a measurement.
 
-- `Breath guide` (evidence: moderate)
-  - `Resonance breathing`: about 5.5 breaths per minute (4.5 s in, 6.5 s out). Pitch and loudness rise on the inhale and fall on the exhale, and an on-screen orb follows the same curve.
-  - `Cyclic sighing`: a double inhale followed by a long exhale, 5 minutes by default.
-- `40 Hz pulse` (evidence: limited)
-  - `Recommended`: `sine`-style modulation, 20 minutes, conservative defaults.
-  - `Gentle`: the same structure with a lower starting volume.
-- `Noise` (evidence: limited)
-  - `Pink noise`, `Brown noise`, and `Ocean (synthetic)`, which is brown noise with a slow 9-second swell.
+#### Sound library
+
+Sounds are grouped by what the listener wants right now. The evidence label of the selected sound is shown next to its description.
+
+- `Calm down`
+  - `Resonance breathing` (evidence: moderate): about 5.5 breaths per minute (4.5 s in, 6.5 s out). Pitch and loudness rise on the inhale and fall on the exhale, and an on-screen orb follows the same curve.
+  - `Cyclic sighing` (evidence: moderate): a double inhale followed by a long exhale, 5 minutes by default.
+  - `Ocean (synthetic)`: brown noise with a slow 9-second swell.
+  - `Breeze (synthetic)`: low-passed noise with slow, irregular gusts.
+- `Focus`
+  - `40 Hz` (evidence: limited): `sine`-style 40 Hz modulation, 20 minutes, conservative defaults.
+  - `40 Hz gentle`: the same structure with a lower starting volume.
+  - `Pink noise` and `Rain (synthetic)`, which layers random droplets over pink noise.
+- `Rest / sleep`
+  - `Bedtime breathing` (evidence: moderate): 4 s in, 8 s out, 5 breaths per minute.
+  - `Brown noise` and `Fire (synthetic)`, a low roar with occasional crackles.
 - `Exploratory` (experimental): a more pronounced `gated` pulse, hidden behind an explicit toggle.
+
+Noise and nature sounds are rated `limited`.
 
 The breath guides are rated highest because slow and exhale-weighted breathing has repeated human evidence. The sound only paces the breathing. The effect is attributed to the breathing, not to the sound.
 
@@ -103,7 +113,6 @@ The player shows:
 - `Start session`
 - `Stop`
 - session-length chips for `5 min`, `10 min`, `15 min`, `20 min`, and `30 min`
-- a recording mode switch: `Off`, `Check-in`, or `Blind comparison`, plus an optional 60-second reaction test
 
 The session timer counts down during playback and stops the audio automatically when the selected duration ends.
 
@@ -111,13 +120,15 @@ The session timer counts down during playback and stops the audio automatically 
 
 The main control area keeps the session-length choices and `Volume` slider visible. `Background noise` and direct base-tone adjustment stay in the collapsed advanced section.
 
-Presets, timer duration, and tone checks can be changed while stopped. Volume, base tone, and background noise can be adjusted during playback.
+Timer duration and tone checks can be changed while stopped. Volume, base tone, background noise, and (when not recording) the sound itself can be changed during playback.
+
+Recording is collapsed under `Recording and comparison (optional)`: `Off` (the default), `Check-in`, or `Blind comparison`, plus an optional 60-second reaction test.
 
 ### Check-ins and blind comparison
 
-With `Check-in` mode (the default), `Start` first opens a short form: `clarity`, `mood`, and `fatigue` on 0–10 sliders, and optionally a 60-second reaction-time test modelled on the brief psychomotor vigilance test (PVT-B, 1–4 s random intervals, lapses at 500 ms or more). The same form appears after the session ends or is stopped, and a result card shows the before/after change. `Play without recording` skips the form.
+Recording is off by default, so playback starts immediately. Settings saved by older versions, where check-ins were the default, are reset to off once. With `Check-in` mode, `Start` first opens a short form: `clarity`, `mood`, and `fatigue` on 0–10 sliders, and optionally a 60-second reaction-time test modelled on the brief psychomotor vigilance test (PVT-B, 1–4 s random intervals, lapses at 500 ms or more). The same form appears after the session ends or is stopped, and a result card shows the before/after change. `Play without recording` skips the form.
 
-`Blind comparison` locks the preset to `Recommended` and assigns each session to one of two arms without showing which:
+`Blind comparison` locks the sound to `40 Hz` and assigns each session to one of two arms without showing which:
 
 - `active`: the normal 40 Hz sine pulse
 - `sham`: pulses with the same envelope and loudness but random intervals (12.5–37.5 ms, mean 25 ms), following the random-frequency control used in Martorell et al., 2019

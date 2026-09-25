@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../src/App';
 import type { AudioEngine } from '../src/audio/engine';
@@ -56,7 +56,7 @@ describe('App', () => {
     const engine = createMockEngine();
     render(<App engine={engine} />);
 
-    expect(screen.getAllByText('おすすめ').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('40 Hz').length).toBeGreaterThan(0);
     expect(screen.getAllByText('20分').length).toBeGreaterThan(0);
     expect(screen.queryByLabelText(/age/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/sex/i)).not.toBeInTheDocument();
@@ -456,7 +456,7 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: '停止' })).toBeEnabled();
   });
 
-  it('locks timer, presets and tone check during playback while allowing live tuning', async () => {
+  it('locks timer and tone check during playback while allowing live tuning', async () => {
     const engine = createMockEngine();
     render(<App engine={engine} />);
     await finishSetup();
@@ -464,13 +464,56 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('再生中'));
     expect(screen.getByRole('button', { name: '10分' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /やさしめ/ })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'トーンチェックをやり直す' })).toBeDisabled();
     fireEvent.change(screen.getByLabelText('音の高さ'), { target: { value: '300' } });
     await waitFor(() => expect(engine.update).toHaveBeenCalledWith(expect.objectContaining({ carrierHz: 300 })));
     fireEvent.click(screen.getByRole('button', { name: '停止' }));
     await waitFor(() => expect(screen.getByRole('button', { name: '10分' })).toBeEnabled());
     expect(screen.getByRole('button', { name: 'トーンチェックをやり直す' })).toBeEnabled();
+  });
+
+  it('plays a sound with one tap and switches sounds live without any check-in', async () => {
+    window.localStorage.removeItem(TRACKING_STORAGE_KEY);
+    const engine = createMockEngine();
+    render(<App engine={engine} />);
+    await finishSetup();
+
+    const library = screen.getByRole('group', { name: 'サウンド一覧' });
+    fireEvent.click(within(library).getByRole('button', { name: /雨/ }));
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('再生中'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(engine.start).toHaveBeenCalledWith(expect.objectContaining({ profileId: 'noise-rain' }), {});
+
+    fireEvent.change(screen.getByLabelText('音量'), { target: { value: '0.4' } });
+    fireEvent.click(within(library).getByRole('button', { name: /焚き火/ }));
+    await waitFor(() =>
+      expect(engine.update).toHaveBeenLastCalledWith(
+        expect.objectContaining({ profileId: 'noise-fire', masterVolume: 0.4, durationMinutes: 20 }),
+      ),
+    );
+    expect(engine.start).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(within(library).getByRole('button', { name: /焚き火/ }));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('停止中'));
+    expect(engine.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it('turns off check-ins saved by older versions so playback starts right away', async () => {
+    window.localStorage.setItem(
+      TRACKING_STORAGE_KEY,
+      JSON.stringify({ prefs: { mode: 'checkin', reactionTest: true }, records: [] }),
+    );
+    const engine = createMockEngine();
+    render(<App engine={engine} />);
+    await finishSetup();
+
+    fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('再生中'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(JSON.parse(window.localStorage.getItem(TRACKING_STORAGE_KEY) ?? '{}')).toEqual(
+      expect.objectContaining({ prefsVersion: 2, prefs: { mode: 'off', reactionTest: true } }),
+    );
   });
 
   it('hydrates persisted settings into a consistent state', async () => {

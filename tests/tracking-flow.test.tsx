@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../src/App';
 import type { AudioEngine } from '../src/audio/engine';
@@ -26,6 +26,10 @@ function storedTracking() {
 describe('tracked sessions', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.localStorage.setItem(
+      TRACKING_STORAGE_KEY,
+      JSON.stringify({ prefsVersion: 2, prefs: { mode: 'checkin', reactionTest: false } }),
+    );
   });
 
   afterEach(() => {
@@ -56,7 +60,7 @@ describe('tracked sessions', () => {
     fireEvent.change(screen.getByLabelText('頭のスッキリ'), { target: { value: '6' } });
     fireEvent.click(screen.getByRole('button', { name: '記録を保存' }));
 
-    expect(screen.getByRole('heading', { name: 'おすすめの前後比較' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '40 Hzの前後比較' })).toBeInTheDocument();
     expect(screen.getByText('+3')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '閉じる' }));
 
@@ -85,17 +89,23 @@ describe('tracked sessions', () => {
     render(<App engine={engine} />);
     await finishSetup();
 
-    fireEvent.click(screen.getByRole('button', { name: /共鳴呼吸/ }));
+    const library = screen.getByRole('group', { name: 'サウンド一覧' });
+    fireEvent.click(within(library).getByRole('button', { name: /共鳴呼吸/ }));
+    fireEvent.click(screen.getByRole('button', { name: '記録せずに再生' }));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('再生中'));
+    fireEvent.click(screen.getByRole('button', { name: '停止' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'セッション開始' })).toBeEnabled());
+
     fireEvent.click(screen.getByRole('radio', { name: 'ブラインド比較' }));
-    expect(screen.getByRole('button', { name: /おすすめ/ })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: /共鳴呼吸/ })).toBeDisabled();
+    expect(within(library).getByRole('button', { pressed: true })).toHaveTextContent('なめらかな40 Hzの脈動');
+    expect(within(library).getByRole('button', { name: /共鳴呼吸/ })).toBeDisabled();
 
     fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
     expect(screen.getByText(/ブラインド比較中です/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '記録して再生' }));
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('再生中'));
 
-    const [, options] = vi.mocked(engine.start).mock.calls[0];
+    const [, options] = vi.mocked(engine.start).mock.calls.at(-1)!;
     expect(['active', 'sham']).toContain(options?.condition);
 
     fireEvent.click(screen.getByRole('button', { name: '停止' }));

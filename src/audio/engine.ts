@@ -81,31 +81,40 @@ export class IsochronicAudioEngine implements AudioEngine {
       return;
     }
 
+    const soundChanged = this.latestSettings.profileId !== nextSettings.profileId;
     this.latestSettings = nextSettings;
 
     if (!this.nodes) {
       return;
     }
 
-    this.applyToNode(this.latestSettings);
-
     const { context, output } = this.nodes;
-    output.gain.cancelScheduledValues(context.currentTime);
-    output.gain.linearRampToValueAtTime(
-      this.latestSettings.masterVolume,
-      context.currentTime + 0.12,
-    );
+    const now = context.currentTime;
+    output.gain.cancelScheduledValues(now);
+
+    if (soundChanged) {
+      // Dip to silence so switching programs mid-playback does not click.
+      output.gain.setValueAtTime(output.gain.value, now);
+      output.gain.linearRampToValueAtTime(0, now + SWITCH_FADE_SEC);
+      this.applyToNode(nextSettings, now + SWITCH_FADE_SEC);
+      output.gain.linearRampToValueAtTime(nextSettings.masterVolume, now + SWITCH_FADE_SEC * 2.5);
+      return;
+    }
+
+    this.applyToNode(nextSettings);
+    output.gain.linearRampToValueAtTime(nextSettings.masterVolume, now + 0.12);
   }
 
-  private applyToNode(settings: SessionSettings): void {
+  private applyToNode(settings: SessionSettings, at?: number): void {
     if (!this.nodes) {
       return;
     }
 
     const { context, node } = this.nodes;
     const profile = getRecommendationProfile(settings.profileId);
+    const time = at ?? context.currentTime;
     const setParam = (name: string, value: number) =>
-      node.parameters.get(name)?.setValueAtTime(value, context.currentTime);
+      node.parameters.get(name)?.setValueAtTime(value, time);
 
     setParam('carrierHz', settings.carrierHz);
     setParam('modulationMode', this.getModulationMode(profile.modulationStyle));
@@ -142,7 +151,8 @@ export class IsochronicAudioEngine implements AudioEngine {
 }
 
 const PROGRAM_CODES = { gamma: 0, breath: 1, noise: 2 } as const;
-const NOISE_COLOR_CODES = { pink: 0, brown: 1, ocean: 2 } as const;
+const NOISE_COLOR_CODES = { pink: 0, brown: 1, ocean: 2, rain: 3, wind: 4, fire: 5 } as const;
+const SWITCH_FADE_SEC = 0.2;
 
 function hasSameAudioSettings(current: SessionSettings, next: SessionSettings): boolean {
   return (

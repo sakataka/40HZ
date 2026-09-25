@@ -8,18 +8,23 @@ import type {
 import {
   EVIDENCE_LABELS,
   getRecommendationProfile,
-  PROGRAM_GROUPS,
+  MOOD_GROUPS,
   RECOMMENDATION_PROFILES,
+  suggestForHour,
 } from '../features/session/presets';
 import type { TrackingMode, TrackingPrefs } from '../features/tracking/types';
 import { SESSION_LIMITS } from '../lib/settings';
 import { BreathGuide } from './BreathGuide';
 
 const DURATION_OPTIONS = [5, 10, 15, 20, 30] as const;
-const TRACKING_MODES: { mode: TrackingMode; label: string }[] = [
-  { mode: 'off', label: '記録なし' },
-  { mode: 'checkin', label: '前後チェック' },
-  { mode: 'experiment', label: 'ブラインド比較' },
+const TRACKING_MODES: { mode: TrackingMode; label: string; hint: string }[] = [
+  { mode: 'off', label: '記録なし', hint: '再生するだけで、何も記録しません。' },
+  { mode: 'checkin', label: '前後チェック', hint: '再生の前後に、疲れ・気分・頭のスッキリを記録します。' },
+  {
+    mode: 'experiment',
+    label: 'ブラインド比較',
+    hint: '再生ごとに「40 Hzの脈動」か「平均速度が同じランダムな脈動」を自動で割り当て、終了後に明かします。音は「40 Hz」に固定されます。',
+  },
 ];
 const EXPERIMENTAL_PROFILES = RECOMMENDATION_PROFILES.filter(
   (profile) => profile.evidenceLevel === 'experimental',
@@ -31,7 +36,7 @@ type PlayerPanelProps = {
   sessionState: SessionState;
   userContext: UserContext;
   trackingPrefs: TrackingPrefs;
-  onApplyProfile: (profileId: string) => void;
+  onSelectProfile: (profileId: string) => void;
   onChangeTrackingPrefs: (updates: Partial<TrackingPrefs>) => void;
   onStart: () => void;
   onStop: () => Promise<void>;
@@ -45,7 +50,7 @@ export function PlayerPanel({
   sessionState,
   userContext,
   trackingPrefs,
-  onApplyProfile,
+  onSelectProfile,
   onChangeTrackingPrefs,
   onStart,
   onStop,
@@ -54,33 +59,44 @@ export function PlayerPanel({
 }: PlayerPanelProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showExploratory, setShowExploratory] = useState(false);
+  const [showTracking, setShowTracking] = useState(trackingPrefs.mode !== 'off');
+  const [suggestion] = useState(() => suggestForHour(new Date().getHours()));
   const canStart = readyToStart && sessionState.status === 'idle';
   const canStop = sessionState.status === 'running';
   const activeProfile = getRecommendationProfile(settings.profileId);
   const blind = trackingPrefs.mode === 'experiment';
-  const presetsLocked = sessionState.status !== 'idle' || blind;
+  const tracking = trackingPrefs.mode !== 'off';
+  // Without recording, tapping a sound while playing switches to it on the fly.
+  const soundsLocked = !readyToStart
+    || blind
+    || sessionState.status === 'starting'
+    || sessionState.status === 'stopping'
+    || (canStop && tracking);
   const startedAt = sessionState.endsAt == null
     ? null
     : sessionState.endsAt - settings.durationMinutes * 60_000;
+  const activeTrackingMode = TRACKING_MODES.find((option) => option.mode === trackingPrefs.mode)!;
 
-  function renderPreset(profile: RecommendationProfile) {
+  function renderSound(profile: RecommendationProfile) {
+    const active = activeProfile.id === profile.id;
+    const playing = active && canStop;
     return (
       <button
         key={profile.id}
-        aria-pressed={activeProfile.id === profile.id}
-        className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
+        aria-pressed={active}
+        className={`sound-card ${active ? 'sound-active' : ''} ${playing ? 'sound-playing' : ''}`}
         type="button"
-        disabled={presetsLocked}
-        onClick={() => onApplyProfile(profile.id)}
+        disabled={soundsLocked}
+        onClick={() => onSelectProfile(profile.id)}
       >
-        <div className="preset-head">
-          <span>{profile.label}</span>
+        <span className="sound-head">
+          <span className="sound-icon" aria-hidden="true">{playing ? '❚❚' : '▶'}</span>
+          <span className="sound-title">{profile.label}</span>
           {profile.evidenceLevel === 'experimental' ? (
             <small className="evidence-pill evidence-experimental">試験的</small>
           ) : null}
-        </div>
-
-        <small>{profile.description}</small>
+        </span>
+        <small>{playing ? '再生中・タップで停止' : profile.summary}</small>
       </button>
     );
   }
@@ -95,6 +111,18 @@ export function PlayerPanel({
       </div>
 
       <div className="playback-console">
+        <div className="now-playing">
+          <span>{canStop ? '再生中' : '選択中'}</span>
+          <strong>{blind ? '40 Hz／対照（非表示）' : activeProfile.label}</strong>
+          <p>
+            {blind ? 'ブラインド比較中。どちらの音かは終了後に表示されます。' : activeProfile.description}
+            {' '}
+            <small className={`evidence-pill evidence-${activeProfile.evidenceLevel}`}>
+              {EVIDENCE_LABELS[activeProfile.evidenceLevel]}
+            </small>
+          </p>
+        </div>
+
         <div className="timer-strip">
           <div className="button-row">
             <button
@@ -122,12 +150,11 @@ export function PlayerPanel({
           </div>
         </div>
 
+        {activeProfile.breath && canStop && startedAt != null ? (
+          <BreathGuide pattern={activeProfile.breath} startedAt={startedAt} />
+        ) : null}
 
         <div className="context-chip-row" aria-label="現在の設定">
-          <div className="duration-chip">
-            <span>プリセット</span>
-            <strong>{blind ? '40 Hz／対照（非表示）' : activeProfile.label}</strong>
-          </div>
           <div className="duration-chip">
             <span>出力</span>
             <strong>{formatOutputMode(userContext.outputMode)}</strong>
@@ -140,92 +167,74 @@ export function PlayerPanel({
             <span>基準音</span>
             <strong>{settings.carrierHz}Hz</strong>
           </div>
-        </div>
-
-        {activeProfile.breath && canStop && startedAt != null ? (
-          <BreathGuide pattern={activeProfile.breath} startedAt={startedAt} />
-        ) : null}
-
-        <div className="tracking-row">
-          <div className="segmented" role="radiogroup" aria-label="記録モード">
-            {TRACKING_MODES.map((option) => (
-              <label key={option.mode} className={trackingPrefs.mode === option.mode ? 'is-selected' : ''}>
-                <input
-                  type="radio"
-                  name="trackingMode"
-                  checked={trackingPrefs.mode === option.mode}
-                  disabled={sessionState.status !== 'idle'}
-                  onChange={() => onChangeTrackingPrefs({ mode: option.mode })}
-                />
-                {option.label}
-              </label>
-            ))}
-          </div>
-          {trackingPrefs.mode !== 'off' ? (
-            <label className="check-label">
-              <input
-                type="checkbox"
-                checked={trackingPrefs.reactionTest}
-                disabled={sessionState.status !== 'idle'}
-                onChange={(event) => onChangeTrackingPrefs({ reactionTest: event.currentTarget.checked })}
-              />
-              反応テスト（60秒）も行う
-            </label>
+          {tracking ? (
+            <div className="duration-chip">
+              <span>記録</span>
+              <strong>{activeTrackingMode.label}</strong>
+            </div>
           ) : null}
         </div>
-        {blind ? (
-          <p className="player-hint">
-            ブラインド比較では、再生ごとに「40 Hzの脈動」か「平均速度が同じランダムな脈動」を自動で割り当て、終了後に明かします。プリセットは「おすすめ」に固定されます。
-          </p>
+      </div>
+
+      <div className="suggestion-strip" role="group" aria-label="今のおすすめ">
+        <div className="suggestion-copy">
+          <span>今のおすすめ（{suggestion.label}）</span>
+          <small>{suggestion.note}</small>
+        </div>
+        <div className="suggestion-actions">
+          {suggestion.profileIds.map((profileId) => {
+            const profile = getRecommendationProfile(profileId);
+            return (
+              <button
+                key={profileId}
+                className="suggestion-button"
+                type="button"
+                disabled={soundsLocked}
+                onClick={() => onSelectProfile(profileId)}
+              >
+                <span aria-hidden="true">▶</span> {profile.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="sound-library" role="group" aria-label="サウンド一覧">
+        {MOOD_GROUPS.map((group) => (
+          <div className="sound-group" key={group.mood}>
+            <div className="sound-group-head">
+              <h3>{group.label}</h3>
+              <small>{group.note}</small>
+            </div>
+            <div className="sound-grid">
+              {RECOMMENDATION_PROFILES.filter(
+                (profile) => profile.mood === group.mood && profile.evidenceLevel !== 'experimental',
+              ).map(renderSound)}
+            </div>
+          </div>
+        ))}
+
+        <div className="collapse-row">
+          <button
+            aria-controls="exploratory-settings"
+            aria-expanded={showExploratory}
+            className="inline-toggle"
+            type="button"
+            onClick={() => setShowExploratory((value) => !value)}
+          >
+            {showExploratory ? '試験的な設定を隠す' : '試験的な設定を表示'}
+          </button>
+        </div>
+
+        {showExploratory ? (
+          <div className="sound-grid" id="exploratory-settings">
+            {EXPERIMENTAL_PROFILES.map(renderSound)}
+          </div>
         ) : null}
       </div>
 
       <div className="settings-section">
-        <div className="section-head">
-          <div>
-            <h3>再生設定</h3>
-          </div>
-          <p>プリセットと時間は停止中に変更できます。</p>
-        </div>
-
         <div className="settings-grid">
-          <div className="settings-column">
-            {PROGRAM_GROUPS.map((group) => {
-              const profiles = RECOMMENDATION_PROFILES.filter(
-                (profile) => profile.program === group.program && profile.evidenceLevel !== 'experimental',
-              );
-              return (
-                <div className="preset-group" key={group.program}>
-                  <div className="preset-group-head">
-                    <span>{group.label}</span>
-                    <small className={`evidence-pill evidence-${profiles[0].evidenceLevel}`}>
-                      {EVIDENCE_LABELS[profiles[0].evidenceLevel]}
-                    </small>
-                  </div>
-                  <div className="preset-grid">{profiles.map(renderPreset)}</div>
-                </div>
-              );
-            })}
-
-            <div className="collapse-row">
-              <button
-                aria-controls="exploratory-settings"
-                aria-expanded={showExploratory}
-                className="inline-toggle"
-                type="button"
-                onClick={() => setShowExploratory((value) => !value)}
-              >
-                {showExploratory ? '試験的な設定を隠す' : '試験的な設定を表示'}
-              </button>
-            </div>
-
-            {showExploratory ? (
-              <div className="exploratory-card" id="exploratory-settings">
-                {EXPERIMENTAL_PROFILES.map(renderPreset)}
-              </div>
-            ) : null}
-          </div>
-
           <div className="settings-column">
             <p className="control-label">タイマー</p>
             <div className="duration-row" role="group" aria-label="セッションの長さ">
@@ -242,66 +251,108 @@ export function PlayerPanel({
                 </button>
               ))}
             </div>
+          </div>
 
-            <div className="control-grid">
+          <div className="settings-column">
+            <RangeControl
+              label="音量"
+              value={settings.masterVolume}
+              min={SESSION_LIMITS.masterVolume.min}
+              max={SESSION_LIMITS.masterVolume.max}
+              step={0.01}
+              displayValue={formatPercent(settings.masterVolume)}
+              onChange={(value) => onUpdateSettings({ masterVolume: value })}
+            />
+          </div>
+        </div>
+
+        <div className="toggle-row">
+          <button
+            aria-controls="advanced-settings"
+            aria-expanded={showAdvanced}
+            className="inline-toggle"
+            type="button"
+            onClick={() => setShowAdvanced((value) => !value)}
+          >
+            {showAdvanced ? 'チューニングを閉じる' : 'チューニング'}
+          </button>
+          <button
+            aria-controls="tracking-settings"
+            aria-expanded={showTracking}
+            className="inline-toggle"
+            type="button"
+            onClick={() => setShowTracking((value) => !value)}
+          >
+            {showTracking ? '記録と比較を閉じる' : '記録と比較（任意）'}
+          </button>
+        </div>
+
+        {showAdvanced ? (
+          <div className="advanced-card" id="advanced-settings">
+            <div className="advanced-control-grid">
               <RangeControl
-                label="音量"
-                value={settings.masterVolume}
-                min={SESSION_LIMITS.masterVolume.min}
-                max={SESSION_LIMITS.masterVolume.max}
+                label="音の高さ"
+                value={settings.carrierHz}
+                min={SESSION_LIMITS.carrierHz.min}
+                max={SESSION_LIMITS.carrierHz.max}
+                step={10}
+                displayValue={`${settings.carrierHz}Hz`}
+                onChange={(value) => onUpdateSettings({ carrierHz: value })}
+              />
+              <RangeControl
+                label="背景ノイズ"
+                value={settings.backgroundNoiseLevel}
+                min={SESSION_LIMITS.backgroundNoiseLevel.min}
+                max={SESSION_LIMITS.backgroundNoiseLevel.max}
                 step={0.01}
-                displayValue={formatPercent(settings.masterVolume)}
-                onChange={(value) => onUpdateSettings({ masterVolume: value })}
+                displayValue={formatPercent(settings.backgroundNoiseLevel)}
+                onChange={(value) => onUpdateSettings({ backgroundNoiseLevel: value })}
               />
             </div>
 
-            <div className="collapse-row">
-              <button
-                aria-controls="advanced-settings"
-                aria-expanded={showAdvanced}
-                className="inline-toggle"
-                type="button"
-                onClick={() => setShowAdvanced((value) => !value)}
-              >
-                {showAdvanced ? 'チューニングを閉じる' : 'チューニング'}
+            <div className="advanced-actions">
+              <p>
+                音の高さと背景ノイズは、40 Hzと呼吸ガイドの音に使われます。再生中も調整できます。
+              </p>
+              <button className="ghost-button" type="button" disabled={sessionState.status !== 'idle'} onClick={() => void onResetCalibration()}>
+                トーンチェックをやり直す
               </button>
             </div>
-
-            {showAdvanced ? (
-              <div className="advanced-card" id="advanced-settings">
-                <div className="advanced-control-grid">
-                  <RangeControl
-                    label="音の高さ"
-                    value={settings.carrierHz}
-                    min={SESSION_LIMITS.carrierHz.min}
-                    max={SESSION_LIMITS.carrierHz.max}
-                    step={10}
-                    displayValue={`${settings.carrierHz}Hz`}
-                    onChange={(value) => onUpdateSettings({ carrierHz: value })}
-                  />
-                  <RangeControl
-                    label="背景ノイズ"
-                    value={settings.backgroundNoiseLevel}
-                    min={SESSION_LIMITS.backgroundNoiseLevel.min}
-                    max={SESSION_LIMITS.backgroundNoiseLevel.max}
-                    step={0.01}
-                    displayValue={formatPercent(settings.backgroundNoiseLevel)}
-                    onChange={(value) => onUpdateSettings({ backgroundNoiseLevel: value })}
-                  />
-                </div>
-
-                <div className="advanced-actions">
-                  <p>
-                    脈動は40 Hz固定です。音の高さと背景ノイズは再生中も調整できます。
-                  </p>
-                  <button className="ghost-button" type="button" disabled={sessionState.status !== 'idle'} onClick={() => void onResetCalibration()}>
-                    トーンチェックをやり直す
-                  </button>
-                </div>
-              </div>
-            ) : null}
           </div>
-        </div>
+        ) : null}
+
+        {showTracking ? (
+          <div className="advanced-card" id="tracking-settings">
+            <div className="tracking-row">
+              <div className="segmented" role="radiogroup" aria-label="記録モード">
+                {TRACKING_MODES.map((option) => (
+                  <label key={option.mode} className={trackingPrefs.mode === option.mode ? 'is-selected' : ''}>
+                    <input
+                      type="radio"
+                      name="trackingMode"
+                      checked={trackingPrefs.mode === option.mode}
+                      disabled={sessionState.status !== 'idle'}
+                      onChange={() => onChangeTrackingPrefs({ mode: option.mode })}
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+              {tracking ? (
+                <label className="check-label">
+                  <input
+                    type="checkbox"
+                    checked={trackingPrefs.reactionTest}
+                    disabled={sessionState.status !== 'idle'}
+                    onChange={(event) => onChangeTrackingPrefs({ reactionTest: event.currentTarget.checked })}
+                  />
+                  反応テスト（60秒）も行う
+                </label>
+              ) : null}
+            </div>
+            <p className="player-hint">{activeTrackingMode.hint}</p>
+          </div>
+        ) : null}
       </div>
       <p className="player-note">小さな音量から始め、不快に感じたら停止してください。</p>
     </section>

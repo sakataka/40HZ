@@ -4,15 +4,22 @@ export const TRACKING_STORAGE_KEY = 'forty-hz-tracking';
 export const HEALTH_STORAGE_KEY = 'forty-hz-health-samples';
 
 export const DEFAULT_TRACKING_PREFS: TrackingPrefs = {
-  mode: 'checkin',
+  mode: 'off',
   reactionTest: false,
 };
 
+/** v2 made recording opt-in; earlier data defaulted to check-ins on every play. */
+const TRACKING_PREFS_VERSION = 2;
+
 export function loadTrackingData(): TrackingData {
   const stored = readJson<Partial<TrackingData>>(TRACKING_STORAGE_KEY);
+  const storedPrefs = stored?.prefsVersion === TRACKING_PREFS_VERSION
+    ? stored.prefs
+    : { ...stored?.prefs, mode: DEFAULT_TRACKING_PREFS.mode };
 
   return {
-    prefs: { ...DEFAULT_TRACKING_PREFS, ...stored?.prefs },
+    prefsVersion: TRACKING_PREFS_VERSION,
+    prefs: { ...DEFAULT_TRACKING_PREFS, ...storedPrefs },
     records: Array.isArray(stored?.records) ? stored.records.filter(isRecord) : [],
     experimentQueue: Array.isArray(stored?.experimentQueue)
       ? stored.experimentQueue.filter((value) => value === 'active' || value === 'sham')

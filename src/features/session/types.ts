@@ -6,7 +6,10 @@ export type Program = 'gamma' | 'breath' | 'noise';
 
 export type EvidenceLevel = 'moderate' | 'limited' | 'experimental';
 
-export type NoiseColor = 'pink' | 'brown' | 'ocean';
+export type NoiseColor = 'pink' | 'brown' | 'ocean' | 'rain' | 'wind' | 'fire';
+
+/** What the listener wants right now; used to group the sound library. */
+export type Mood = 'calm' | 'focus' | 'rest';
 
 export type BreathPattern = {
   inhaleSec: number;
@@ -21,6 +24,7 @@ export type RecommendationProfile = {
   description: string;
   evidenceLevel: EvidenceLevel;
   program: Program;
+  mood: Mood;
   modulationStyle: 'sine' | 'gated';
   breath?: BreathPattern;
   noiseColor?: NoiseColor;

@@ -91,7 +91,9 @@ describe('IsochronicAudioEngine', () => {
 
     engine.update({ profileId: 'exploratory' });
 
-    expect(modulationParam?.setValueAtTime).toHaveBeenLastCalledWith(1, 1);
+    // Switching sounds dips the output to silence and swaps parameters at the bottom of the fade.
+    expect(gainParam?.linearRampToValueAtTime).toHaveBeenCalledWith(0, 1.2);
+    expect(modulationParam?.setValueAtTime).toHaveBeenLastCalledWith(1, 1.2);
 
     await engine.stop();
   });

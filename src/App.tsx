@@ -69,6 +69,25 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
     }
   }
 
+  /** One tap plays the chosen sound; while playing it switches, and tapping the current one stops. */
+  function selectProfile(profileId: string) {
+    if (sessionState.status === 'running') {
+      if (profileId === settings.profileId) {
+        void stopSession();
+      } else if (tracking.prefs.mode === 'off') {
+        applyProfile(profileId);
+      }
+      return;
+    }
+
+    if (sessionState.status !== 'idle') {
+      return;
+    }
+
+    applyProfile(profileId);
+    handleStart();
+  }
+
   function changeTrackingPrefs(updates: Partial<TrackingPrefs>) {
     tracking.updatePrefs(updates);
     if (updates.mode === 'experiment' && settings.profileId !== BLIND_PROFILE_ID) {
@@ -158,7 +177,7 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
           settings={settings}
           userContext={userContext}
           trackingPrefs={tracking.prefs}
-          onApplyProfile={applyProfile}
+          onSelectProfile={selectProfile}
           onChangeTrackingPrefs={changeTrackingPrefs}
           onStart={handleStart}
           onStop={stopSession}
