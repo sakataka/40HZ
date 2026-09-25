@@ -7,8 +7,10 @@ import {
 } from './storage';
 import type {
   CalibrationResult,
+  SessionEndInfo,
   SessionSettings,
   SessionState,
+  StartOptions,
   UserContext,
 } from './types';
 import {
@@ -21,7 +23,11 @@ const TICK_MS = 250;
 
 type AudioOperation = 'idle' | 'starting' | 'stopping' | 'previewing' | 'calibrating';
 
-export function useSession(engine: AudioEngine) {
+type UseSessionOptions = {
+  onSessionEnd?: (info: SessionEndInfo) => void;
+};
+
+export function useSession(engine: AudioEngine, { onSessionEnd }: UseSessionOptions = {}) {
   const [initialPreferences] = useState(() =>
     hydrateStoredPreferences(loadStoredPreferences()),
   );
@@ -47,6 +53,12 @@ export function useSession(engine: AudioEngine) {
   const userContextRef = useRef(userContext);
   const previewBaseToneHzRef = useRef(previewBaseToneHz);
   const audioOperationRef = useRef<AudioOperation>('idle');
+  const startedAtRef = useRef<number | null>(null);
+  const onSessionEndRef = useRef(onSessionEnd);
+
+  useEffect(() => {
+    onSessionEndRef.current = onSessionEnd;
+  }, [onSessionEnd]);
 
   useEffect(() => {
     settingsRef.current = settings;
@@ -143,15 +155,15 @@ export function useSession(engine: AudioEngine) {
   const calibrationComplete = calibration.completedAt != null;
   const calibrationBusy = audioOperation === 'previewing' || audioOperation === 'calibrating';
 
-  async function startSession(): Promise<void> {
+  async function startSession(options: StartOptions = {}): Promise<boolean> {
     const current = sessionStateRef.current;
     if (current.status !== 'idle' || !beginAudioOperation('starting')) {
-      return;
+      return false;
     }
 
     if (!setupComplete || !calibrationComplete) {
       endAudioOperation();
-      return;
+      return false;
     }
 
     setSessionState((previous) => ({
@@ -163,16 +175,17 @@ export function useSession(engine: AudioEngine) {
       await stopPreviewAudio();
 
       const activeSettings = settingsRef.current;
-      await engine.start(activeSettings);
+      await engine.start(activeSettings, options);
 
       const now = Date.now();
+      startedAtRef.current = now;
       setSessionState((previous) => ({
         ...previous,
         status: 'running',
         endsAt: now + activeSettings.durationMinutes * 60_000,
         remainingMs: activeSettings.durationMinutes * 60_000,
       }));
-
+      return true;
     } catch {
       const refreshedSettings = settingsRef.current;
       setSessionState((previous) => ({
@@ -181,6 +194,7 @@ export function useSession(engine: AudioEngine) {
         endsAt: null,
         remainingMs: refreshedSettings.durationMinutes * 60_000,
       }));
+      return false;
     } finally {
       endAudioOperation();
     }
@@ -197,11 +211,22 @@ export function useSession(engine: AudioEngine) {
       status: 'stopping',
     }));
 
+    const endedAt = Date.now();
+    const startedAt = startedAtRef.current ?? endedAt;
+    const plannedMinutes = settingsRef.current.durationMinutes;
+    startedAtRef.current = null;
+
     try {
       await engine.stop();
     } catch {
       // Keep the UI recoverable even if the browser audio stack rejects a stop call.
     } finally {
+      onSessionEndRef.current?.({
+        startedAt,
+        endedAt,
+        plannedMinutes,
+        completed: current.remainingMs <= 0 || endedAt >= (current.endsAt ?? Infinity),
+      });
       const refreshedSettings = settingsRef.current;
       setSessionState((previous) => ({
         ...previous,

@@ -29,6 +29,8 @@ class FakeAudioWorkletNode {
     ['carrierHz', new FakeAudioParam()],
     ['modulationMode', new FakeAudioParam()],
     ['noiseLevel', new FakeAudioParam()],
+    ['program', new FakeAudioParam()],
+    ['inhaleSec', new FakeAudioParam()],
   ]);
 
   constructor() {
@@ -91,6 +93,20 @@ describe('IsochronicAudioEngine', () => {
 
     expect(modulationParam?.setValueAtTime).toHaveBeenLastCalledWith(1, 1);
 
+    await engine.stop();
+  });
+
+  it('switches to aperiodic pulses for the blind sham arm and drives breath programs', async () => {
+    const engine = new IsochronicAudioEngine();
+
+    await engine.start(BASE_SETTINGS, { condition: 'sham' });
+    expect(lastWorkletNode?.parameters.get('modulationMode')?.setValueAtTime).toHaveBeenLastCalledWith(2, 1);
+    await engine.stop();
+
+    await engine.start({ ...BASE_SETTINGS, profileId: 'breath-resonance' });
+    expect(lastWorkletNode?.parameters.get('modulationMode')?.setValueAtTime).toHaveBeenLastCalledWith(0, 1);
+    expect(lastWorkletNode?.parameters.get('program')?.setValueAtTime).toHaveBeenLastCalledWith(1, 1);
+    expect(lastWorkletNode?.parameters.get('inhaleSec')?.setValueAtTime).toHaveBeenLastCalledWith(4.5, 1);
     await engine.stop();
   });
 });

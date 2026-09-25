@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../src/App';
 import type { AudioEngine } from '../src/audio/engine';
 import { STORAGE_KEY } from '../src/features/session/storage';
+import { TRACKING_STORAGE_KEY } from '../src/features/tracking/storage';
 
 function createMockEngine(overrides: Partial<AudioEngine> = {}): AudioEngine {
   return {
@@ -40,6 +41,11 @@ async function finishSetup() {
 describe('App', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    // These tests cover direct playback; tracked flows are covered in tracking-flow.test.tsx.
+    window.localStorage.setItem(
+      TRACKING_STORAGE_KEY,
+      JSON.stringify({ prefs: { mode: 'off', reactionTest: false } }),
+    );
   });
 
   afterEach(() => {

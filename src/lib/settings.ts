@@ -92,12 +92,15 @@ function getStartingVolume(
   sensitivity: SoundSensitivity,
   outputMode: OutputMode,
 ): number {
+  const program = getRecommendationProfile(profileId).program;
   const base =
     profileId === 'gentle'
       ? 0.18
       : profileId === 'exploratory'
         ? 0.22
-        : 0.24;
+        : program === 'noise'
+          ? 0.2
+          : 0.24;
 
   const sensitivityOffset = sensitivity === 'sensitive' ? -0.05 : 0;
   const outputOffset = outputMode === 'speaker' ? 0.03 : 0;
@@ -109,7 +112,7 @@ function getNoiseLevel(profileId: string, outputMode: OutputMode): number {
   const base =
     profileId === 'gentle'
       ? 0.03
-      : profileId === 'exploratory'
+      : profileId === 'exploratory' || getRecommendationProfile(profileId).program === 'noise'
         ? 0.02
         : 0.025;
 

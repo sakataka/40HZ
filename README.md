@@ -1,6 +1,6 @@
 # 40Hz Audio Sessions
 
-This project is a browser-based React and Vite app for generating 40 Hz isochronic audio sessions. It is intended as a research-informed listening tool for general adult self-use. It is not presented as a medical device, a treatment, or a clinically validated intervention.
+This project is a browser-based React and Vite app for short "brain reset" audio sessions: 40 Hz isochronic pulses, paced-breathing guides, and masking noise. Each program is labelled by strength of evidence, and the app can record before/after check-ins and run blinded self-experiments (40 Hz vs. an aperiodic sham) so the user can test what actually works for them. It is intended as a research-informed tool for general adult self-use. It is not presented as a medical device, a treatment, or a clinically validated intervention.
 
 ## Getting Started
 
@@ -79,18 +79,21 @@ The tone check is a listener-preference shortcut. It is intended to help the use
 
 The main control panel is organized around simple playback controls.
 
-#### Listening modes
+#### Programs
 
-The app exposes two primary modes and one optional exploratory mode:
+Presets are grouped by program, and each group shows an evidence label:
 
-- `Recommended`
-  Uses `sine`-style modulation with a standard 20-minute session and conservative starting defaults.
-- `Gentle`
-  Keeps the same general structure but lowers the starting volume.
-- `Exploratory`
-  Uses a more pronounced `gated` pulse style and is hidden behind an explicit toggle.
+- `Breath guide` (evidence: moderate)
+  - `Resonance breathing`: about 5.5 breaths per minute (4.5 s in, 6.5 s out). Pitch and loudness rise on the inhale and fall on the exhale, and an on-screen orb follows the same curve.
+  - `Cyclic sighing`: a double inhale followed by a long exhale, 5 minutes by default.
+- `40 Hz pulse` (evidence: limited)
+  - `Recommended`: `sine`-style modulation, 20 minutes, conservative defaults.
+  - `Gentle`: the same structure with a lower starting volume.
+- `Noise` (evidence: limited)
+  - `Pink noise`, `Brown noise`, and `Ocean (synthetic)`, which is brown noise with a slow 9-second swell.
+- `Exploratory` (experimental): a more pronounced `gated` pulse, hidden behind an explicit toggle.
 
-The main UI presents `Recommended` and `Gentle` as the default choices. `Exploratory` is available for comparison but is not treated as the standard recommendation.
+The breath guides are rated highest because slow and exhale-weighted breathing has repeated human evidence. The sound only paces the breathing. The effect is attributed to the breathing, not to the sound.
 
 #### Session controls
 
@@ -99,7 +102,8 @@ The player shows:
 - `Time left`
 - `Start session`
 - `Stop`
-- session-length chips for `10 min`, `15 min`, `20 min`, and `30 min`
+- session-length chips for `5 min`, `10 min`, `15 min`, `20 min`, and `30 min`
+- a recording mode switch: `Off`, `Check-in`, or `Blind comparison`, plus an optional 60-second reaction test
 
 The session timer counts down during playback and stops the audio automatically when the selected duration ends.
 
@@ -108,6 +112,27 @@ The session timer counts down during playback and stops the audio automatically 
 The main control area keeps the session-length choices and `Volume` slider visible. `Background noise` and direct base-tone adjustment stay in the collapsed advanced section.
 
 Presets, timer duration, and tone checks can be changed while stopped. Volume, base tone, and background noise can be adjusted during playback.
+
+### Check-ins and blind comparison
+
+With `Check-in` mode (the default), `Start` first opens a short form: `clarity`, `mood`, and `fatigue` on 0–10 sliders, and optionally a 60-second reaction-time test modelled on the brief psychomotor vigilance test (PVT-B, 1–4 s random intervals, lapses at 500 ms or more). The same form appears after the session ends or is stopped, and a result card shows the before/after change. `Play without recording` skips the form.
+
+`Blind comparison` locks the preset to `Recommended` and assigns each session to one of two arms without showing which:
+
+- `active`: the normal 40 Hz sine pulse
+- `sham`: pulses with the same envelope and loudness but random intervals (12.5–37.5 ms, mean 25 ms), following the random-frequency control used in Martorell et al., 2019
+
+Arms are block-randomized in groups of four (two of each) and revealed after the post check-in. Once each arm has at least three completed sessions, the `Records` panel shows for each metric the mean improvement per arm, the difference with a Welch 95% confidence interval, and a plain verdict. Sessions stopped before the timer ends are kept but excluded from the analysis. Open-label check-ins are summarized per preset separately.
+
+This is an n-of-1 experiment. Day-to-day variation and the audible difference between arms (the blinding is imperfect) still apply.
+
+### Apple Watch
+
+Browsers cannot read HealthKit, so heart data comes in through an iOS Shortcut named `40Hz Health`. The shortcut copies lines such as `HR,<ISO 8601 date>,<bpm>` and `HRV,<date>,<ms>` from the last day to the clipboard. `Import from clipboard` (or pasting into the text box) merges them into local storage. Each session then shows the mean heart rate for the 15 minutes before and during playback, plus nearby HRV. The blind comparison also gains a `heart-rate drop` metric. Step-by-step shortcut instructions are in the app. Starting a `Mind and Body` workout on the watch during playback gives dense heart-rate sampling.
+
+### Data storage
+
+Settings, records, and imported health samples stay in the browser's `localStorage` for that origin. The LocalWeb build and the GitHub Pages build therefore keep separate records. `Export (JSON)` and `Import` move records between them.
 
 ### Advanced settings
 

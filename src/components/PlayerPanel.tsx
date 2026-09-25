@@ -1,16 +1,26 @@
 import { useState } from 'react';
 import type {
+  RecommendationProfile,
   SessionSettings,
   SessionState,
   UserContext,
 } from '../features/session/types';
-import { getRecommendationProfile, RECOMMENDATION_PROFILES } from '../features/session/presets';
+import {
+  EVIDENCE_LABELS,
+  getRecommendationProfile,
+  PROGRAM_GROUPS,
+  RECOMMENDATION_PROFILES,
+} from '../features/session/presets';
+import type { TrackingMode, TrackingPrefs } from '../features/tracking/types';
 import { SESSION_LIMITS } from '../lib/settings';
+import { BreathGuide } from './BreathGuide';
 
-const DURATION_OPTIONS = [10, 15, 20, 30] as const;
-const LIMITED_PROFILES = RECOMMENDATION_PROFILES.filter(
-  (profile) => profile.evidenceLevel === 'limited',
-);
+const DURATION_OPTIONS = [5, 10, 15, 20, 30] as const;
+const TRACKING_MODES: { mode: TrackingMode; label: string }[] = [
+  { mode: 'off', label: '記録なし' },
+  { mode: 'checkin', label: '前後チェック' },
+  { mode: 'experiment', label: 'ブラインド比較' },
+];
 const EXPERIMENTAL_PROFILES = RECOMMENDATION_PROFILES.filter(
   (profile) => profile.evidenceLevel === 'experimental',
 );
@@ -20,8 +30,10 @@ type PlayerPanelProps = {
   settings: SessionSettings;
   sessionState: SessionState;
   userContext: UserContext;
+  trackingPrefs: TrackingPrefs;
   onApplyProfile: (profileId: string) => void;
-  onStart: () => Promise<void>;
+  onChangeTrackingPrefs: (updates: Partial<TrackingPrefs>) => void;
+  onStart: () => void;
   onStop: () => Promise<void>;
   onUpdateSettings: (updates: Partial<SessionSettings>) => void;
   onResetCalibration: () => Promise<void>;
@@ -32,7 +44,9 @@ export function PlayerPanel({
   settings,
   sessionState,
   userContext,
+  trackingPrefs,
   onApplyProfile,
+  onChangeTrackingPrefs,
   onStart,
   onStop,
   onUpdateSettings,
@@ -43,6 +57,33 @@ export function PlayerPanel({
   const canStart = readyToStart && sessionState.status === 'idle';
   const canStop = sessionState.status === 'running';
   const activeProfile = getRecommendationProfile(settings.profileId);
+  const blind = trackingPrefs.mode === 'experiment';
+  const presetsLocked = sessionState.status !== 'idle' || blind;
+  const startedAt = sessionState.endsAt == null
+    ? null
+    : sessionState.endsAt - settings.durationMinutes * 60_000;
+
+  function renderPreset(profile: RecommendationProfile) {
+    return (
+      <button
+        key={profile.id}
+        aria-pressed={activeProfile.id === profile.id}
+        className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
+        type="button"
+        disabled={presetsLocked}
+        onClick={() => onApplyProfile(profile.id)}
+      >
+        <div className="preset-head">
+          <span>{profile.label}</span>
+          {profile.evidenceLevel === 'experimental' ? (
+            <small className="evidence-pill evidence-experimental">試験的</small>
+          ) : null}
+        </div>
+
+        <small>{profile.description}</small>
+      </button>
+    );
+  }
 
   return (
     <section className={`panel player-panel session-${sessionState.status}`}>
@@ -60,7 +101,7 @@ export function PlayerPanel({
               aria-label="セッション開始"
               className="primary-button"
               type="button"
-              onClick={() => void onStart()}
+              onClick={onStart}
               disabled={!canStart}
             >
               再生
@@ -85,7 +126,7 @@ export function PlayerPanel({
         <div className="context-chip-row" aria-label="現在の設定">
           <div className="duration-chip">
             <span>プリセット</span>
-            <strong>{activeProfile.label}</strong>
+            <strong>{blind ? '40 Hz／対照（非表示）' : activeProfile.label}</strong>
           </div>
           <div className="duration-chip">
             <span>出力</span>
@@ -100,6 +141,43 @@ export function PlayerPanel({
             <strong>{settings.carrierHz}Hz</strong>
           </div>
         </div>
+
+        {activeProfile.breath && canStop && startedAt != null ? (
+          <BreathGuide pattern={activeProfile.breath} startedAt={startedAt} />
+        ) : null}
+
+        <div className="tracking-row">
+          <div className="segmented" role="radiogroup" aria-label="記録モード">
+            {TRACKING_MODES.map((option) => (
+              <label key={option.mode} className={trackingPrefs.mode === option.mode ? 'is-selected' : ''}>
+                <input
+                  type="radio"
+                  name="trackingMode"
+                  checked={trackingPrefs.mode === option.mode}
+                  disabled={sessionState.status !== 'idle'}
+                  onChange={() => onChangeTrackingPrefs({ mode: option.mode })}
+                />
+                {option.label}
+              </label>
+            ))}
+          </div>
+          {trackingPrefs.mode !== 'off' ? (
+            <label className="check-label">
+              <input
+                type="checkbox"
+                checked={trackingPrefs.reactionTest}
+                disabled={sessionState.status !== 'idle'}
+                onChange={(event) => onChangeTrackingPrefs({ reactionTest: event.currentTarget.checked })}
+              />
+              反応テスト（60秒）も行う
+            </label>
+          ) : null}
+        </div>
+        {blind ? (
+          <p className="player-hint">
+            ブラインド比較では、再生ごとに「40 Hzの脈動」か「平均速度が同じランダムな脈動」を自動で割り当て、終了後に明かします。プリセットは「おすすめ」に固定されます。
+          </p>
+        ) : null}
       </div>
 
       <div className="settings-section">
@@ -112,25 +190,22 @@ export function PlayerPanel({
 
         <div className="settings-grid">
           <div className="settings-column">
-            <div className="preset-grid">
-              {LIMITED_PROFILES.map((profile) => (
-                <button
-                  key={profile.id}
-                  aria-pressed={activeProfile.id === profile.id}
-                  className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
-                  type="button"
-                  disabled={sessionState.status !== 'idle'}
-                  onClick={() => onApplyProfile(profile.id)}
-                >
-                  <div className="preset-head">
-                    <span>{profile.label}</span>
-
+            {PROGRAM_GROUPS.map((group) => {
+              const profiles = RECOMMENDATION_PROFILES.filter(
+                (profile) => profile.program === group.program && profile.evidenceLevel !== 'experimental',
+              );
+              return (
+                <div className="preset-group" key={group.program}>
+                  <div className="preset-group-head">
+                    <span>{group.label}</span>
+                    <small className={`evidence-pill evidence-${profiles[0].evidenceLevel}`}>
+                      {EVIDENCE_LABELS[profiles[0].evidenceLevel]}
+                    </small>
                   </div>
-
-                  <small>{profile.description}</small>
-                </button>
-              ))}
-            </div>
+                  <div className="preset-grid">{profiles.map(renderPreset)}</div>
+                </div>
+              );
+            })}
 
             <div className="collapse-row">
               <button
@@ -146,23 +221,7 @@ export function PlayerPanel({
 
             {showExploratory ? (
               <div className="exploratory-card" id="exploratory-settings">
-                {EXPERIMENTAL_PROFILES.map((profile) => (
-                  <button
-                    key={profile.id}
-                    aria-pressed={activeProfile.id === profile.id}
-                    className={`preset-card ${activeProfile.id === profile.id ? 'preset-active' : ''}`}
-                    type="button"
-                    disabled={sessionState.status !== 'idle'}
-                    onClick={() => onApplyProfile(profile.id)}
-                  >
-                    <div className="preset-head">
-                      <span>{profile.label}</span>
-                      <small className="evidence-pill evidence-experimental">試験的</small>
-                    </div>
-
-                    <small>{profile.description}</small>
-                  </button>
-                ))}
+                {EXPERIMENTAL_PROFILES.map(renderPreset)}
               </div>
             ) : null}
           </div>

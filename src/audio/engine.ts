@@ -1,8 +1,8 @@
 import { getRecommendationProfile } from '../features/session/presets';
-import type { SessionSettings } from '../features/session/types';
+import type { BlindCondition, SessionSettings, StartOptions } from '../features/session/types';
 
 export interface AudioEngine {
-  start(settings: SessionSettings): Promise<void>;
+  start(settings: SessionSettings, options?: StartOptions): Promise<void>;
   stop(): Promise<void>;
   update(settings: Partial<SessionSettings>): void;
 }
@@ -16,12 +16,15 @@ type RunningNodes = {
 export class IsochronicAudioEngine implements AudioEngine {
   private nodes: RunningNodes | null = null;
   private latestSettings: SessionSettings | null = null;
+  private condition: BlindCondition | undefined;
 
-  async start(settings: SessionSettings): Promise<void> {
+  async start(settings: SessionSettings, options: StartOptions = {}): Promise<void> {
     this.latestSettings = settings;
+    this.condition = options.condition;
 
     if (this.nodes) {
-      this.update(settings);
+      this.applyToNode(settings);
+      this.nodes.output.gain.setValueAtTime(settings.masterVolume, this.nodes.context.currentTime);
       await this.nodes.context.resume();
       return;
     }
@@ -100,16 +103,29 @@ export class IsochronicAudioEngine implements AudioEngine {
     }
 
     const { context, node } = this.nodes;
-    node.parameters.get('carrierHz')?.setValueAtTime(settings.carrierHz, context.currentTime);
-    node.parameters
-      .get('modulationMode')
-      ?.setValueAtTime(
-        getRecommendationProfile(settings.profileId).modulationStyle === 'gated' ? 1 : 0,
-        context.currentTime,
-      );
-    node.parameters
-      .get('noiseLevel')
-      ?.setValueAtTime(settings.backgroundNoiseLevel, context.currentTime);
+    const profile = getRecommendationProfile(settings.profileId);
+    const setParam = (name: string, value: number) =>
+      node.parameters.get(name)?.setValueAtTime(value, context.currentTime);
+
+    setParam('carrierHz', settings.carrierHz);
+    setParam('modulationMode', this.getModulationMode(profile.modulationStyle));
+    setParam('noiseLevel', settings.backgroundNoiseLevel);
+    setParam('program', PROGRAM_CODES[profile.program]);
+    setParam('noiseColor', NOISE_COLOR_CODES[profile.noiseColor ?? 'pink']);
+
+    if (profile.breath) {
+      setParam('inhaleSec', profile.breath.inhaleSec);
+      setParam('topUpSec', profile.breath.topUpSec);
+      setParam('exhaleSec', profile.breath.exhaleSec);
+    }
+  }
+
+  private getModulationMode(style: 'sine' | 'gated'): number {
+    if (this.condition === 'sham') {
+      return 2;
+    }
+
+    return style === 'gated' ? 1 : 0;
   }
 
   private async forceClose(): Promise<void> {
@@ -124,6 +140,9 @@ export class IsochronicAudioEngine implements AudioEngine {
     await context.close();
   }
 }
+
+const PROGRAM_CODES = { gamma: 0, breath: 1, noise: 2 } as const;
+const NOISE_COLOR_CODES = { pink: 0, brown: 1, ocean: 2 } as const;
 
 function hasSameAudioSettings(current: SessionSettings, next: SessionSettings): boolean {
   return (

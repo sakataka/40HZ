@@ -1,10 +1,17 @@
 import { useEffect } from 'react';
 import { PlayerPanel } from './components/PlayerPanel';
 import { CalibrationModal } from './components/CalibrationModal';
+import { CheckInModal } from './components/CheckInModal';
 import { EvidencePanel } from './components/EvidencePanel';
+import { HistoryPanel } from './components/HistoryPanel';
 import { OnboardingModal } from './components/OnboardingModal';
+import { ResultModal } from './components/ResultModal';
+import { WatchPanel } from './components/WatchPanel';
 import { sharedAudioEngine, type AudioEngine } from './audio/engine';
 import { useSession } from './features/session/useSession';
+import { countArms } from './features/tracking/stats';
+import type { CheckIn, TrackingPrefs } from './features/tracking/types';
+import { useTracking } from './features/tracking/useTracking';
 
 const MODAL_FOCUSABLE_SELECTOR = [
   'button:not(:disabled)',
@@ -15,11 +22,15 @@ const MODAL_FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
+const BLIND_PROFILE_ID = 'recommended';
+
 type AppProps = {
   engine?: AudioEngine;
+  reactionDurationSec?: number;
 };
 
-export default function App({ engine = sharedAudioEngine }: AppProps) {
+export default function App({ engine = sharedAudioEngine, reactionDurationSec }: AppProps) {
+  const tracking = useTracking();
   const {
     calibrationBusy,
     calibrationComplete,
@@ -36,8 +47,34 @@ export default function App({ engine = sharedAudioEngine }: AppProps) {
     setupComplete,
     updateSettings,
     userContext,
-  } = useSession(engine);
-  const modalOpen = !setupComplete || !calibrationComplete;
+  } = useSession(engine, { onSessionEnd: tracking.handleSessionEnd });
+  const { flow } = tracking;
+  const trackingModalOpen = flow.step === 'pre' || flow.step === 'post' || flow.step === 'result';
+  const modalOpen = !setupComplete || !calibrationComplete || trackingModalOpen;
+  const blind = tracking.prefs.mode === 'experiment';
+
+  function handleStart() {
+    if (tracking.prefs.mode === 'off') {
+      void startSession();
+      return;
+    }
+    tracking.beginPre();
+  }
+
+  async function startTrackedSession(pre: CheckIn | undefined) {
+    const condition = tracking.beginRun(settings.profileId, pre);
+    const started = await startSession({ condition });
+    if (!started) {
+      tracking.cancel();
+    }
+  }
+
+  function changeTrackingPrefs(updates: Partial<TrackingPrefs>) {
+    tracking.updatePrefs(updates);
+    if (updates.mode === 'experiment' && settings.profileId !== BLIND_PROFILE_ID) {
+      applyProfile(BLIND_PROFILE_ID);
+    }
+  }
 
   useEffect(() => {
     if (!modalOpen) {
@@ -102,7 +139,7 @@ export default function App({ engine = sharedAudioEngine }: AppProps) {
         restoreTarget?.focus();
       });
     };
-  }, [calibrationComplete, modalOpen, setupComplete]);
+  }, [calibrationComplete, flow.step, modalOpen, setupComplete]);
 
   return (
     <main className="app-shell">
@@ -120,15 +157,65 @@ export default function App({ engine = sharedAudioEngine }: AppProps) {
           sessionState={sessionState}
           settings={settings}
           userContext={userContext}
+          trackingPrefs={tracking.prefs}
           onApplyProfile={applyProfile}
-          onStart={startSession}
+          onChangeTrackingPrefs={changeTrackingPrefs}
+          onStart={handleStart}
           onStop={stopSession}
           onResetCalibration={resetCalibration}
           onUpdateSettings={updateSettings}
         />
 
+        <HistoryPanel
+          records={tracking.records}
+          healthSamples={tracking.healthSamples}
+          onDelete={tracking.deleteRecord}
+          onClear={tracking.clearRecords}
+          onImport={(records, healthSamples) => {
+            tracking.importRecords(records);
+            tracking.importHealth(healthSamples);
+          }}
+        />
+
+        <WatchPanel
+          healthSamples={tracking.healthSamples}
+          onImport={tracking.importHealth}
+          onClear={tracking.clearHealth}
+        />
+
         <EvidencePanel />
       </div>
+
+      {flow.step === 'pre' ? (
+        <CheckInModal
+          phase="pre"
+          blind={blind}
+          reactionTest={tracking.prefs.reactionTest}
+          reactionDurationSec={reactionDurationSec}
+          onSubmit={(checkIn) => void startTrackedSession(checkIn)}
+          onSkip={() => {
+            tracking.cancel();
+            void startSession();
+          }}
+          onCancel={tracking.cancel}
+        />
+      ) : null}
+
+      {flow.step === 'post' ? (
+        <CheckInModal
+          phase="post"
+          blind={false}
+          reactionTest={Boolean(flow.draft.pre?.reaction)}
+          reactionDurationSec={reactionDurationSec}
+          initial={flow.draft.pre}
+          onSubmit={tracking.submitPost}
+          onSkip={() => tracking.submitPost(undefined)}
+        />
+      ) : null}
+
+      {flow.step === 'result' ? (
+        <ResultModal record={flow.record} arms={countArms(tracking.records)} onClose={tracking.cancel} />
+      ) : null}
 
       {!setupComplete ? (
         <OnboardingModal defaultContext={userContext} onComplete={completeOnboarding} />
