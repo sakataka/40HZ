@@ -199,7 +199,7 @@ input[type="checkbox"] { accent-color: var(--accent); width: 18px; height: 18px;
 .watch-guide li + li { margin-top: 4px; }
 .watch-guide code { padding: 1px 5px; border-radius: 4px; background: var(--soft); font-size: 12px; word-break: break-all; }
 @media (prefers-reduced-motion: reduce) {
-  .breath-orb { transition: none; }
+  .breath-orb { transition: none; transform: none !important; }
 }
 @media (hover: hover) {
   button:not(:disabled):hover { filter: brightness(.94); }
@@ -209,10 +209,27 @@ input[type="checkbox"] { accent-color: var(--accent); width: 18px; height: 18px;
   :root { color: #f4f4f5; background: #18181b; --background: #18181b; --surface: #222225; --muted: #a1a1aa; --line: #3b3b40; --soft: #303034; --accent: #83adff; --selected: #25344e; --good: #6fcf97; --bad: #f28b6b; --moderate: #6fcf97; }
   .primary-button { background: #2f6fdb; border-color: #2f6fdb; }
 }
-@media (max-width: 600px) {
-  .app-shell { width: calc(100% - 28px); padding-top: 24px; }
+@media (max-width: 640px) {
+  :root { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif; color: #000; background: #f2f2f7; letter-spacing: 0; --background: #f2f2f7; --surface: #fff; --soft: #e9e9ee; --line: #e0e0e5; --muted: #8a8a8e; --accent: #007aff; --selected: #e9e9ee; --bad: #ff3b30; }
+  body { min-width: 0; min-height: 100dvh; overflow-wrap: anywhere; }
+  .app-shell { width: 100%; padding: calc(24px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(36px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  .app-header h1 { font-size: 34px; letter-spacing: 0; }
+  input, textarea, select, .paste-field textarea { font-size: 16px; }
+  button, a, summary, input[type="range"], .segmented label, .check-label, .option-group label { min-height: 44px; min-width: 44px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  a { display: inline-block; }
+  button:not(:disabled):active, a:active, summary:active, label:active { filter: brightness(.88); }
+  .primary-button, .ghost-button, .duration-row button, .suggestion-button { border-radius: 22px; }
+  .primary-button { background: var(--accent); border-color: var(--accent); }
+  .modal-backdrop { align-items: end; padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
+  .modal-card { max-height: calc(100dvh - env(safe-area-inset-top)); border: 0; border-radius: 24px 24px 0 0; }
+  .segmented { background: var(--soft); border: 0; padding: 3px; border-radius: 12px; }
+  .segmented label.is-selected { background: var(--surface); border-radius: 10px; }
+  .segmented label + label { border: 0; }
+  .sound-grid { min-width: 0; }
+  .sound-card { min-width: 0; }
+  .breath-orb { background: var(--accent); }
   .header-note { display: none; }
-  .panel { padding: 20px; }
+  .panel { padding: 20px; border: 0; border-radius: 16px; min-width: 0; }
   .evidence-panel { padding: 0 20px; }
   .settings-grid { grid-template-columns: 1fr; gap: 20px; }
   .sound-grid { grid-template-columns: 1fr 1fr; }
@@ -224,11 +241,51 @@ input[type="checkbox"] { accent-color: var(--accent); width: 18px; height: 18px;
   .timer-strip button { padding-inline: 14px; }
   .context-chip-row { gap: 8px 16px; }
   .context-chip-row .duration-chip { font-size: 11px; }
-  .modal-card { padding: 20px; }
+  .modal-card { padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); }
   .modal-grid, .calibration-grid { grid-template-columns: 1fr; }
   .segmented { width: 100%; }
   .segmented label { flex: 1; justify-content: center; padding: 0 6px; font-size: 12px; }
   .breath-orb { width: 56px; height: 56px; }
   .experiment-block { padding: 12px; }
   .ci-bar { width: 88px; }
+}
+
+@media (max-width: 640px) {
+  .header-note,
+  .playback-status,
+  .now-playing > span,
+  .suggestion-copy small,
+  .suggestion-button span,
+  .sound-group-head small,
+  .sound-icon,
+  .sound-card > small,
+  .timer-readout span,
+  .context-chip-row .duration-chip,
+  .section-head p, .player-note,
+  .advanced-actions p,
+  .advanced-actions button,
+  .evidence-pill, .section-label,
+  .safety-list,
+  .calibration-card p,
+  .player-hint, .block-note, .empty-note,
+  .breath-guide span,
+  .scale-ends,
+  .reaction-feedback,
+  .reveal-card span,
+  .stats-table thead th,
+  .verdict,
+  .history-item-main,
+  .condition-tag,
+  .delete-button,
+  .watch-status,
+  .paste-field,
+  .watch-guide code,
+  .segmented label { font-size: 13px; }
+}
+@media (max-width: 640px) and (prefers-color-scheme: dark) {
+  :root { color: #fff; background: #000; --background: #000; --surface: #1c1c1e; --soft: #2c2c2e; --line: #38383a; --muted: #98989f; --accent: #0a84ff; --bad: #ff453a; --selected: #2c2c2e; }
+}
+
+@media (max-width: 640px) and (prefers-reduced-transparency: reduce) {
+  .modal-backdrop { background: var(--background); }
 }
