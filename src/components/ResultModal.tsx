@@ -30,7 +30,7 @@ export function ResultModal({ record, arms, onClose }: ResultModalProps) {
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="result-title">
       <div className="modal-card">
-        <p className="section-label">記録しました</p>
+        <p className="step-label">記録しました</p>
         <h2 id="result-title">{getRecommendationProfile(record.profileId).label}の前後比較</h2>
 
         {record.condition ? (

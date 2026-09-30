@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { AudioEngine } from '../../audio/engine';
 import {
   hydrateStoredPreferences,
@@ -56,23 +56,24 @@ export function useSession(engine: AudioEngine, { onSessionEnd }: UseSessionOpti
   const startedAtRef = useRef<number | null>(null);
   const onSessionEndRef = useRef(onSessionEnd);
 
-  useEffect(() => {
+  // Sync refs during commit so a click right after a render never reads the previous state.
+  useLayoutEffect(() => {
     onSessionEndRef.current = onSessionEnd;
   }, [onSessionEnd]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     settingsRef.current = settings;
   }, [settings]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     sessionStateRef.current = sessionState;
   }, [sessionState]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     userContextRef.current = userContext;
   }, [userContext]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     previewBaseToneHzRef.current = previewBaseToneHz;
   }, [previewBaseToneHz]);
 

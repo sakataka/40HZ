@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import type { CheckIn, ReactionSummary } from '../features/tracking/types';
 import { ReactionTest } from './ReactionTest';
 
@@ -46,7 +46,7 @@ export function CheckInModal({
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="checkin-title">
       <div className="modal-card">
-        <p className="section-label">{isPre ? '再生前チェック' : '再生後チェック'}</p>
+        <p className="step-label">{isPre ? '再生前チェック' : '再生後チェック'}</p>
         <h2 id="checkin-title">{isPre ? 'いまの状態を記録する' : '終わった直後の状態は？'}</h2>
         {blind && isPre ? (
           <p className="hero-copy blind-note">
@@ -58,11 +58,11 @@ export function CheckInModal({
           <>
             <div className="scale-grid">
               {SCALES.map((scale) => (
-                <label className="control-card scale-card" key={scale.key}>
-                  <div className="control-meta">
+                <label className="range-control scale-card" key={scale.key}>
+                  <span className="range-meta">
                     <span>{scale.label}</span>
                     <strong>{ratings[scale.key]}</strong>
-                  </div>
+                  </span>
                   <input
                     aria-label={scale.label}
                     data-initial-focus={scale.key === 'clarity' || undefined}
@@ -71,15 +71,16 @@ export function CheckInModal({
                     max={10}
                     step={1}
                     value={ratings[scale.key]}
+                    style={{ '--fill': `${ratings[scale.key] * 10}%` } as CSSProperties}
                     onChange={(event) => {
                       const value = Number(event.currentTarget.value);
                       setRatings((current) => ({ ...current, [scale.key]: value }));
                     }}
                   />
-                  <div className="scale-ends">
+                  <span className="scale-ends">
                     <span>0 {scale.low}</span>
                     <span>10 {scale.high}</span>
-                  </div>
+                  </span>
                 </label>
               ))}
             </div>
@@ -92,11 +93,11 @@ export function CheckInModal({
                 {reactionTest ? '次へ（反応テスト）' : submitLabel}
               </button>
               <div className="button-row modal-secondary">
-                <button className="inline-toggle" type="button" onClick={onSkip}>
+                <button className="text-button" type="button" onClick={onSkip}>
                   {isPre ? '記録せずに再生' : '記録しない'}
                 </button>
                 {onCancel ? (
-                  <button className="inline-toggle" type="button" onClick={onCancel}>
+                  <button className="text-button" type="button" onClick={onCancel}>
                     キャンセル
                   </button>
                 ) : null}

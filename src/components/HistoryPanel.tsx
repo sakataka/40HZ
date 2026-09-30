@@ -61,15 +61,15 @@ export function HistoryPanel({ records, healthSamples, onDelete, onClear, onImpo
   }
 
   return (
-    <section className="panel history-panel" aria-labelledby="history-title">
-      <div className="panel-header">
-        <h2 id="history-title">記録と比較</h2>
-        <span className="header-note">{records.length}件</span>
+    <section className="card history-panel" aria-labelledby="history-title">
+      <div className="card-head">
+        <h2 id="history-title">セッションの記録</h2>
+        <span className="count-note">{records.length}件</span>
       </div>
 
       {records.length === 0 ? (
         <p className="empty-note">
-          まだ記録がありません。再生の前後に状態を記録すると、ここで集計されます。
+          まだ記録がありません。「前後チェック」か「ブラインド比較」を選んで再生すると、前後の変化がここに集まります。
         </p>
       ) : null}
 
@@ -123,14 +123,14 @@ export function HistoryPanel({ records, healthSamples, onDelete, onClear, onImpo
       ) : null}
 
       <div className="history-actions">
-        <button className="ghost-button" type="button" onClick={exportData} disabled={records.length === 0}>
+        <button className="secondary-button" type="button" onClick={exportData} disabled={records.length === 0}>
           書き出し（JSON）
         </button>
-        <button className="ghost-button" type="button" onClick={() => fileInputRef.current?.click()}>
+        <button className="secondary-button" type="button" onClick={() => fileInputRef.current?.click()}>
           読み込み
         </button>
         <button
-          className="ghost-button danger-button"
+          className="secondary-button danger-button"
           type="button"
           disabled={records.length === 0}
           onClick={() => {
@@ -286,7 +286,7 @@ function RecordRow({
       </div>
       <button
         aria-label={`${formatDateTime(record.startedAt)}の記録を削除`}
-        className="inline-toggle delete-button"
+        className="text-button delete-button"
         type="button"
         onClick={() => {
           if (window.confirm('この記録を削除しますか？')) {

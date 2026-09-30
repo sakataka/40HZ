@@ -1,17 +1,21 @@
-import { useEffect } from 'react';
-import { PlayerPanel } from './components/PlayerPanel';
+import { useEffect, useRef, useState } from 'react';
 import { CalibrationModal } from './components/CalibrationModal';
 import { CheckInModal } from './components/CheckInModal';
-import { EvidencePanel } from './components/EvidencePanel';
-import { HistoryPanel } from './components/HistoryPanel';
+import { ListenView } from './components/ListenView';
+import { MiniPlayer } from './components/MiniPlayer';
+import { NowPlaying } from './components/NowPlaying';
 import { OnboardingModal } from './components/OnboardingModal';
+import { RecordsView } from './components/RecordsView';
 import { ResultModal } from './components/ResultModal';
-import { WatchPanel } from './components/WatchPanel';
+import { SettingsView } from './components/SettingsView';
+import { TabBar, type AppTab } from './components/TabBar';
 import { sharedAudioEngine, type AudioEngine } from './audio/engine';
+import { getRecommendationProfile } from './features/session/presets';
 import { useSession } from './features/session/useSession';
 import { countArms } from './features/tracking/stats';
 import type { CheckIn, TrackingPrefs } from './features/tracking/types';
 import { useTracking } from './features/tracking/useTracking';
+import { useMediaQuery } from './lib/useMediaQuery';
 
 const MODAL_FOCUSABLE_SELECTOR = [
   'button:not(:disabled)',
@@ -52,6 +56,21 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
   const trackingModalOpen = flow.step === 'pre' || flow.step === 'post' || flow.step === 'result';
   const modalOpen = !setupComplete || !calibrationComplete || trackingModalOpen;
   const blind = tracking.prefs.mode === 'experiment';
+  const compact = useMediaQuery('(max-width: 959px)');
+  const [tab, setTab] = useState<AppTab>('listen');
+  const [playerOpen, setPlayerOpen] = useState(false);
+  const sheetOpen = compact && playerOpen;
+  const miniOpenRef = useRef<HTMLDivElement>(null);
+  const readyToStart = setupComplete && calibrationComplete;
+  const activeProfile = getRecommendationProfile(settings.profileId);
+  const idle = sessionState.status === 'idle';
+  const running = sessionState.status === 'running';
+  // Without recording, tapping a sound while playing switches to it on the fly.
+  const soundsLocked = !readyToStart
+    || blind
+    || sessionState.status === 'starting'
+    || sessionState.status === 'stopping'
+    || (running && tracking.prefs.mode !== 'off');
 
   function handleStart() {
     if (tracking.prefs.mode === 'off') {
@@ -86,6 +105,15 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
 
     applyProfile(profileId);
     handleStart();
+    // Breath guides are followed visually, so bring the full player up on phones.
+    if (compact && getRecommendationProfile(profileId).breath) {
+      setPlayerOpen(true);
+    }
+  }
+
+  function closePlayer() {
+    setPlayerOpen(false);
+    queueMicrotask(() => miniOpenRef.current?.querySelector<HTMLButtonElement>('.mini-open')?.focus());
   }
 
   function changeTrackingPrefs(updates: Partial<TrackingPrefs>) {
@@ -94,6 +122,28 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
       applyProfile(BLIND_PROFILE_ID);
     }
   }
+
+  useEffect(() => {
+    if (!sheetOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.querySelector<HTMLElement>('.now-playing .icon-button')?.focus();
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !document.querySelector('[role="dialog"]')) {
+        setPlayerOpen(false);
+      }
+    }
+
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [sheetOpen]);
 
   useEffect(() => {
     if (!modalOpen) {
@@ -160,49 +210,96 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
     };
   }, [calibrationComplete, flow.step, modalOpen, setupComplete]);
 
+  const nowPlaying = (
+    <NowPlaying
+      profile={activeProfile}
+      settings={settings}
+      sessionState={sessionState}
+      readyToStart={readyToStart}
+      blind={blind}
+      trackingMode={tracking.prefs.mode}
+      sheet={compact}
+      onClose={closePlayer}
+      onStart={handleStart}
+      onStop={stopSession}
+      onUpdateSettings={updateSettings}
+    />
+  );
+
   return (
-    <main className="app-shell">
+    <main className={`app-shell${compact ? ' is-compact' : ''}`}>
       <div className="app-content" aria-hidden={modalOpen || undefined} inert={modalOpen}>
-        <header className="app-header">
-          <div>
-            <h1 id="app-title">40 Hz <span>Audio</span></h1>
-            <p>音を流す。好みに合わせて調整する。</p>
-          </div>
-          <span className="header-note">音声プレーヤー</span>
-        </header>
+        <div className="app-main" aria-hidden={sheetOpen || undefined} inert={sheetOpen}>
+          <header className="app-bar">
+            <span className="brand" aria-label="40 Hz Audio">
+              <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 12h3l2.5-6 4 12 4-12L19 12h2" />
+              </svg>
+              40 Hz <span>Audio</span>
+            </span>
+            {compact ? null : <TabBar current={tab} onChange={setTab} />}
+          </header>
 
-        <PlayerPanel
-          readyToStart={setupComplete && calibrationComplete}
-          sessionState={sessionState}
-          settings={settings}
-          userContext={userContext}
-          trackingPrefs={tracking.prefs}
-          onSelectProfile={selectProfile}
-          onChangeTrackingPrefs={changeTrackingPrefs}
-          onStart={handleStart}
-          onStop={stopSession}
-          onResetCalibration={resetCalibration}
-          onUpdateSettings={updateSettings}
-        />
+          {tab === 'listen' ? (
+            <ListenView
+              activeProfileId={settings.profileId}
+              playing={running}
+              locked={soundsLocked}
+              blind={blind}
+              onSelect={selectProfile}
+              onOpenRecords={() => setTab('records')}
+            />
+          ) : null}
 
-        <HistoryPanel
-          records={tracking.records}
-          healthSamples={tracking.healthSamples}
-          onDelete={tracking.deleteRecord}
-          onClear={tracking.clearRecords}
-          onImport={(records, healthSamples) => {
-            tracking.importRecords(records);
-            tracking.importHealth(healthSamples);
-          }}
-        />
+          {tab === 'records' ? (
+            <RecordsView
+              prefs={tracking.prefs}
+              prefsLocked={!idle}
+              records={tracking.records}
+              healthSamples={tracking.healthSamples}
+              onChangePrefs={changeTrackingPrefs}
+              onDelete={tracking.deleteRecord}
+              onClear={tracking.clearRecords}
+              onImport={(records, healthSamples) => {
+                tracking.importRecords(records);
+                tracking.importHealth(healthSamples);
+              }}
+              onImportHealth={tracking.importHealth}
+              onClearHealth={tracking.clearHealth}
+            />
+          ) : null}
 
-        <WatchPanel
-          healthSamples={tracking.healthSamples}
-          onImport={tracking.importHealth}
-          onClear={tracking.clearHealth}
-        />
+          {tab === 'settings' ? (
+            <SettingsView
+              userContext={userContext}
+              carrierHz={settings.carrierHz}
+              locked={!idle}
+              onChangeContext={completeOnboarding}
+              onResetCalibration={resetCalibration}
+            />
+          ) : null}
+        </div>
 
-        <EvidencePanel />
+        {compact ? (
+          <>
+            {sheetOpen ? <div className="player-sheet">{nowPlaying}</div> : null}
+            <div className="dock" ref={miniOpenRef} aria-hidden={sheetOpen || undefined} inert={sheetOpen}>
+              <MiniPlayer
+                profile={activeProfile}
+                sessionState={sessionState}
+                durationMinutes={settings.durationMinutes}
+                readyToStart={readyToStart}
+                blind={blind}
+                onOpen={() => setPlayerOpen(true)}
+                onStart={handleStart}
+                onStop={stopSession}
+              />
+              <TabBar current={tab} onChange={setTab} />
+            </div>
+          </>
+        ) : (
+          <aside className="player-column">{nowPlaying}</aside>
+        )}
       </div>
 
       {flow.step === 'pre' ? (

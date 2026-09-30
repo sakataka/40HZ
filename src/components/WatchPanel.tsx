@@ -39,22 +39,22 @@ export function WatchPanel({ healthSamples, onImport, onClear }: WatchPanelProps
   }
 
   return (
-    <details className="panel evidence-panel watch-panel">
+    <details className="card disclosure-card watch-panel">
       <summary>Apple Watch 連携</summary>
       <p>
         Webアプリはヘルスケアに直接アクセスできないため、iPhoneのショートカットで心拍数と心拍変動（HRV）をコピーして取り込みます。取り込んだデータはこのブラウザ内だけに保存されます。
       </p>
 
       <div className="watch-status">
-        <div className="duration-chip"><span>心拍数</span><strong>{heartRateCount}件</strong></div>
-        <div className="duration-chip"><span>HRV</span><strong>{hrvCount}件</strong></div>
-        <div className="duration-chip">
+        <div className="stat"><span>心拍数</span><strong>{heartRateCount}件</strong></div>
+        <div className="stat"><span>HRV</span><strong>{hrvCount}件</strong></div>
+        <div className="stat">
           <span>最新</span><strong>{latest ? formatDateTime(latest.at) : '–'}</strong>
         </div>
       </div>
 
       <div className="history-actions">
-        <a className="ghost-button link-button" href={SHORTCUT_URL}>
+        <a className="secondary-button link-button" href={SHORTCUT_URL}>
           ショートカットを実行
         </a>
         <button className="primary-button" type="button" onClick={() => void importFromClipboard()}>
@@ -73,11 +73,11 @@ export function WatchPanel({ healthSamples, onImport, onClear }: WatchPanelProps
         />
       </label>
       <div className="history-actions">
-        <button className="ghost-button" type="button" disabled={!pasted.trim()} onClick={() => importText(pasted)}>
+        <button className="secondary-button" type="button" disabled={!pasted.trim()} onClick={() => importText(pasted)}>
           貼り付けたテキストを取り込む
         </button>
         <button
-          className="ghost-button danger-button"
+          className="secondary-button danger-button"
           type="button"
           disabled={healthSamples.length === 0}
           onClick={() => {

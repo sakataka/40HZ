@@ -6,7 +6,7 @@ type OnboardingModalProps = {
   onComplete: (context: Omit<UserContext, 'completedAt'>) => void;
 };
 
-const SAFETY_POINTS = [
+export const SAFETY_POINTS = [
   'このアプリは医療行為ではなく、臨床的な効果を保証しません。',
   '成人が静かな環境で自分用に使うことを前提にしています。',
   '不快感、めまい、頭痛があればすぐ停止してください。',
@@ -24,10 +24,11 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="setup-title">
       <div className="modal-card">
-        <p className="section-label">初回設定</p>
+        <p className="step-label">はじめに ・ 1 / 2</p>
         <h2 id="setup-title">最初に2つだけ確認します</h2>
+        <p className="hero-copy">控えめな初期音量を選ぶためだけに使います。あとから「設定」で変えられます。</p>
         <div className="modal-grid">
-          <fieldset className="option-group">
+          <fieldset className="option-group choice-cards">
             <legend>音への敏感さ</legend>
             <label>
               <input
@@ -50,7 +51,7 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
             </label>
           </fieldset>
 
-          <fieldset className="option-group">
+          <fieldset className="option-group choice-cards">
             <legend>聞く環境</legend>
             <label>
               <input
@@ -73,14 +74,17 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
           </fieldset>
         </div>
 
-        <ul className="safety-list" aria-label="安全上の注意">
-          {SAFETY_POINTS.map((point) => (
-            <li key={point}>{point}</li>
-          ))}
-        </ul>
+        <details className="safety-details">
+          <summary>安全上の注意（{SAFETY_POINTS.length}項目）</summary>
+          <ul className="safety-list" aria-label="安全上の注意">
+            {SAFETY_POINTS.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+        </details>
+        <p className="fine-print">医療機器ではありません。不快感・めまい・頭痛があればすぐ停止してください。</p>
 
         <div className="modal-footer">
-          <p className="hero-copy">回答は控えめな初期値を選ぶためだけに使います。個人診断はしません。</p>
           <button
             className="primary-button"
             type="button"

@@ -45,29 +45,27 @@ to create the `/40HZ/`-prefixed deployment build.
 
 ## Features and Screen Walkthrough
 
-### Opening screen
+### Layout
 
-The first screen provides a short summary of the current session state. It shows:
+The app has three tabs: `Listen`, `Records`, and `Settings`. The player stays available on every tab.
 
-- the fixed pulse rate at `40 Hz`
-- the current session length
-- the selected listening mode
-- the selected listening setup
+- On phones and narrow windows, the tabs sit in a bottom bar with a mini player above it. The mini player shows the current sound, the remaining time, and a play/stop button. Tapping it opens the full-screen player. Starting a breath guide opens the full-screen player automatically, because the guide is followed visually.
+- On wide windows, the tabs sit in the top bar and the full player is pinned in a right-hand column.
 
-The interface uses a neutral LocalWeb-style palette, follows the system light/dark appearance, and focuses on playback and tuning. Research notes and source links are collapsed under the player.
+The full player shows a countdown ring, the breath orb (for breath guides), the sound description and evidence label, the play/stop button, timer chips, the volume slider, and a collapsed `Tuning` section. Each mood group has its own accent color. The interface follows the system light/dark appearance. Animations are slow (breath pace or a 10-second ambient swell) and never flicker at 40 Hz. They are turned off when the system asks for reduced motion.
 
 ### Before You Start
 
-The onboarding modal asks two questions before playback is enabled:
+The onboarding sheet (step 1 of 2) asks two questions before playback is enabled:
 
 - `Sound sensitivity`: `Standard` or `Sensitive`
 - `Listening setup`: `Headphones` or `Speakers`
 
-These inputs do not attempt to model age, sex, or other demographic variables. They are only used to choose conservative starting values for volume and background noise level. The modal also presents the app's safety limitations before the user proceeds.
+These inputs do not attempt to model age, sex, or other demographic variables. They are only used to choose conservative starting values for volume and background noise level. Both can be changed later in `Settings`. The sheet shows the key safety warning directly and keeps the full list in a collapsible section. The full list also appears in `Settings`.
 
 ### Tone Check
 
-After onboarding, the app opens a `Tone Check` modal. This step compares `220 Hz` and `440 Hz` as candidate base tones.
+After onboarding, the app opens a `Tone Check` sheet (step 2 of 2). This step compares `220 Hz` and `440 Hz` as candidate base tones.
 
 - `Preview` plays a short sample
 - `Use this tone` saves the selected base tone
@@ -75,13 +73,13 @@ After onboarding, the app opens a `Tone Check` modal. This step compares `220 Hz
 
 The tone check is a listener-preference shortcut. It is intended to help the user choose a tone that is audible without sounding overly harsh. It is not described as a research-backed optimization step.
 
-### Main player controls
+### Listen tab
 
-The main control panel is built for "pick a sound and listen". Tapping any sound card starts it right away. While playing, tapping another card crossfades to it (keeping the running timer and volume), and tapping the playing card stops it. Nothing is measured or recorded unless the user turns recording on.
+The `Listen` tab is built for "pick a sound and listen". Tapping any sound card starts it right away. While playing, tapping another card crossfades to it (keeping the running timer and volume), and tapping the playing card stops it. Nothing is measured or recorded unless the user turns recording on.
 
 #### Suggestion for now
 
-A small strip above the library suggests two sounds for the local time of day (morning: resonance breathing / 40 Hz, daytime: pink noise / rain, evening: cyclic sighing / ocean, late night: bedtime breathing / fire). Each suggestion plays with one tap. It is a static rule based on the clock, not a measurement.
+Two large cards at the top suggest sounds for the local time of day (morning: resonance breathing / 40 Hz, daytime: pink noise / rain, evening: cyclic sighing / ocean, late night: bedtime breathing / fire). Each suggestion plays with one tap. It is a static rule based on the clock, not a measurement.
 
 #### Sound library
 
@@ -107,22 +105,11 @@ The breath guides are rated highest because slow and exhale-weighted breathing h
 
 #### Session controls
 
-The player shows:
+The player shows the time left, a single play/stop button, and session-length chips for `5 min`, `10 min`, `15 min`, `20 min`, and `30 min`. The session timer counts down during playback and stops the audio automatically when the selected duration ends. `Volume` is always visible. `Tone pitch` and `Background noise` are in the collapsed `Tuning` section.
 
-- `Time left`
-- `Start session`
-- `Stop`
-- session-length chips for `5 min`, `10 min`, `15 min`, `20 min`, and `30 min`
+Timer duration, listening setup, and tone checks can be changed while stopped. Volume, base tone, background noise, and (when not recording) the sound itself can be changed during playback.
 
-The session timer counts down during playback and stops the audio automatically when the selected duration ends.
-
-#### Basic controls
-
-The main control area keeps the session-length choices and `Volume` slider visible. `Background noise` and direct base-tone adjustment stay in the collapsed advanced section.
-
-Timer duration and tone checks can be changed while stopped. Volume, base tone, background noise, and (when not recording) the sound itself can be changed during playback.
-
-Recording is collapsed under `Recording and comparison (optional)`: `Off` (the default), `Check-in`, or `Blind comparison`, plus an optional 60-second reaction test.
+The recording mode is chosen at the top of the `Records` tab: `Off` (the default), `Check-in`, or `Blind comparison`, plus an optional 60-second reaction test. While a blind comparison is selected, the `Listen` tab shows a notice instead of the suggestions and locks the library.
 
 ### Check-ins and blind comparison
 
@@ -133,32 +120,32 @@ Recording is off by default, so playback starts immediately. Settings saved by o
 - `active`: the normal 40 Hz sine pulse
 - `sham`: pulses with the same envelope and loudness but random intervals (12.5–37.5 ms, mean 25 ms), following the random-frequency control used in Martorell et al., 2019
 
-Arms are block-randomized in groups of four (two of each) and revealed after the post check-in. Once each arm has at least three completed sessions, the `Records` panel shows for each metric the mean improvement per arm, the difference with a Welch 95% confidence interval, and a plain verdict. Sessions stopped before the timer ends are kept but excluded from the analysis. Open-label check-ins are summarized per preset separately.
+Arms are block-randomized in groups of four (two of each) and revealed after the post check-in. Once each arm has at least three completed sessions, the `Records` tab shows for each metric the mean improvement per arm, the difference with a Welch 95% confidence interval, and a plain verdict. Sessions stopped before the timer ends are kept but excluded from the analysis. Open-label check-ins are summarized per preset separately.
 
 This is an n-of-1 experiment. Day-to-day variation and the audible difference between arms (the blinding is imperfect) still apply.
 
 ### Apple Watch
 
-Browsers cannot read HealthKit, so heart data comes in through an iOS Shortcut named `40Hz Health`. The shortcut copies lines such as `HR,<ISO 8601 date>,<bpm>` and `HRV,<date>,<ms>` from the last day to the clipboard. `Import from clipboard` (or pasting into the text box) merges them into local storage. Each session then shows the mean heart rate for the 15 minutes before and during playback, plus nearby HRV. The blind comparison also gains a `heart-rate drop` metric. Step-by-step shortcut instructions are in the app. Starting a `Mind and Body` workout on the watch during playback gives dense heart-rate sampling.
+Browsers cannot read HealthKit, so heart data comes in through an iOS Shortcut named `40Hz Health`. The shortcut copies lines such as `HR,<ISO 8601 date>,<bpm>` and `HRV,<date>,<ms>` from the last day to the clipboard. `Import from clipboard` (or pasting into the text box) merges them into local storage. This section is in the `Records` tab. Each session then shows the mean heart rate for the 15 minutes before and during playback, plus nearby HRV. The blind comparison also gains a `heart-rate drop` metric. Step-by-step shortcut instructions are in the app. Starting a `Mind and Body` workout on the watch during playback gives dense heart-rate sampling.
 
 ### Data storage
 
 Settings, records, and imported health samples stay in the browser's `localStorage` for that origin. The LocalWeb build and the GitHub Pages build therefore keep separate records. `Export (JSON)` and `Import` move records between them.
 
-### Advanced settings
+### Settings tab
 
-The advanced section is collapsed by default. It contains:
+The `Settings` tab contains:
 
-- `Tone pitch`
-- `Background noise`
-- a reminder that the pulse rate stays fixed at 40 Hz
-- a button to run the tone check again
+- `Output` (headphones or speakers) and `Sound sensitivity`. Changing either picks new conservative starting values for volume and background noise.
+- the current base tone and a button to run the tone check again
+- the full safety list
+- the collapsed `About this app and sources` section
 
-This keeps direct base-tone editing available without making it part of the primary workflow.
+Direct base-tone editing stays in the player's `Tuning` section so it is available without being part of the primary workflow.
 
 ### Evidence and Limits
 
-The final panel states the current evidence position in narrow terms:
+The `About this app and sources` section in `Settings` states the current evidence position in narrow terms:
 
 - evidence for audio-only consumer use is limited
 - some EEG paradigms observed stronger 40 Hz responses in eyes-closed or low-arousal conditions

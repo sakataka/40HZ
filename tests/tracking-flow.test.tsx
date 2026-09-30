@@ -65,6 +65,7 @@ describe('tracked sessions', () => {
     fireEvent.click(screen.getByRole('button', { name: '閉じる' }));
 
     await waitFor(() => expect(storedTracking().records).toHaveLength(1));
+    fireEvent.click(screen.getByRole('button', { name: '記録' }));
     expect(storedTracking().records[0]).toEqual(
       expect.objectContaining({ completed: false, pre: expect.objectContaining({ clarity: 3 }), post: expect.objectContaining({ clarity: 6 }) }),
     );
@@ -89,14 +90,17 @@ describe('tracked sessions', () => {
     render(<App engine={engine} />);
     await finishSetup();
 
-    const library = screen.getByRole('group', { name: 'サウンド一覧' });
+    let library = screen.getByRole('group', { name: 'サウンド一覧' });
     fireEvent.click(within(library).getByRole('button', { name: /共鳴呼吸/ }));
     fireEvent.click(screen.getByRole('button', { name: '記録せずに再生' }));
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('再生中'));
     fireEvent.click(screen.getByRole('button', { name: '停止' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'セッション開始' })).toBeEnabled());
 
+    fireEvent.click(screen.getByRole('button', { name: '記録' }));
     fireEvent.click(screen.getByRole('radio', { name: 'ブラインド比較' }));
+    fireEvent.click(screen.getByRole('button', { name: '聴く' }));
+    library = screen.getByRole('group', { name: 'サウンド一覧' });
     expect(within(library).getByRole('button', { pressed: true })).toHaveTextContent('なめらかな40 Hzの脈動');
     expect(within(library).getByRole('button', { name: /共鳴呼吸/ })).toBeDisabled();
 
@@ -123,6 +127,7 @@ describe('tracked sessions', () => {
     render(<App engine={engine} />);
     await finishSetup();
 
+    fireEvent.click(screen.getByRole('button', { name: '記録' }));
     fireEvent.click(screen.getByText('Apple Watch 連携'));
     fireEvent.change(screen.getByLabelText('ヘルスケアデータの貼り付け'), {
       target: { value: 'HR,2026-09-25T10:15:00+09:00,68\nHRV,2026-09-25T10:20:00+09:00,42' },

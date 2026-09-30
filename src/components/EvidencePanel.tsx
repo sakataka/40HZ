@@ -17,7 +17,7 @@ const SOURCES = [
 
 export function EvidencePanel() {
   return (
-    <details className="panel evidence-panel">
+    <details className="card disclosure-card evidence-panel">
       <summary>このアプリについて・参考資料</summary>
       <p>
         音でリラックスや頭のリセットを試し、その効果を自分で確かめるためのツールです。医療機器ではなく、治療や効果を保証するものではありません。
