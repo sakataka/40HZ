@@ -13,10 +13,10 @@ This project is a browser-based React and Vite app for short "brain reset" audio
 
 ```bash
 bun install
-bun run dev
+localweb dev 40hz
 ```
 
-The development server runs at `http://localhost:5173/` by default.
+LocalWeb assigns the port. Open `http://40hz-dev.localhost/`.
 
 ### Build and test
 
