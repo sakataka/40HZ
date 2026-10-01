@@ -251,7 +251,7 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
             />
           ) : null}
 
-          {tab === 'records' ? (
+          <div hidden={tab !== 'records'}>
             <RecordsView
               prefs={tracking.prefs}
               prefsLocked={!idle}
@@ -267,7 +267,7 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
               onImportHealth={tracking.importHealth}
               onClearHealth={tracking.clearHealth}
             />
-          ) : null}
+          </div>
 
           {tab === 'settings' ? (
             <SettingsView

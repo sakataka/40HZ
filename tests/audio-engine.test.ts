@@ -11,9 +11,18 @@ const BASE_SETTINGS: SessionSettings = {
 };
 
 class FakeAudioParam {
-  cancelScheduledValues = vi.fn();
+  events: { value: number; time: number }[] = [];
+  cancelScheduledValues = vi.fn((time: number) => {
+    this.events = this.events.filter((event) => event.time < time);
+  });
   linearRampToValueAtTime = vi.fn();
-  setValueAtTime = vi.fn();
+  setValueAtTime = vi.fn((value: number, time: number) => {
+    this.events.push({ value, time });
+  });
+
+  valueAt(time: number) {
+    return [...this.events].sort((a, b) => a.time - b.time).filter((event) => event.time <= time).at(-1)?.value;
+  }
 }
 
 class FakeGainNode {
@@ -39,6 +48,9 @@ class FakeAudioWorkletNode {
 }
 
 class FakeAudioContext {
+  constructor() {
+    lastContext = this;
+  }
   audioWorklet = {
     addModule: vi.fn().mockResolvedValue(undefined),
   };
@@ -54,11 +66,13 @@ class FakeAudioContext {
 
 let lastGainNode: FakeGainNode | null = null;
 let lastWorkletNode: FakeAudioWorkletNode | null = null;
+let lastContext: FakeAudioContext | null = null;
 
 describe('IsochronicAudioEngine', () => {
   beforeEach(() => {
     lastGainNode = null;
     lastWorkletNode = null;
+    lastContext = null;
     vi.stubGlobal('AudioContext', FakeAudioContext);
     vi.stubGlobal('AudioWorkletNode', FakeAudioWorkletNode);
   });
@@ -109,6 +123,18 @@ describe('IsochronicAudioEngine', () => {
     expect(lastWorkletNode?.parameters.get('modulationMode')?.setValueAtTime).toHaveBeenLastCalledWith(0, 1);
     expect(lastWorkletNode?.parameters.get('program')?.setValueAtTime).toHaveBeenLastCalledWith(1, 1);
     expect(lastWorkletNode?.parameters.get('inhaleSec')?.setValueAtTime).toHaveBeenLastCalledWith(4.5, 1);
+    await engine.stop();
+  });
+
+  it('keeps tuning changes made during a sound switch after the fade finishes', async () => {
+    const engine = new IsochronicAudioEngine();
+    await engine.start(BASE_SETTINGS);
+    engine.update({ profileId: 'gentle' });
+    lastContext!.currentTime = 1.1;
+    engine.update({ carrierHz: 300, backgroundNoiseLevel: 0.1 });
+
+    expect(lastWorkletNode?.parameters.get('carrierHz')?.valueAt(1.3)).toBe(300);
+    expect(lastWorkletNode?.parameters.get('noiseLevel')?.valueAt(1.3)).toBe(0.1);
     await engine.stop();
   });
 });

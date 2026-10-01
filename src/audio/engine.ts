@@ -113,8 +113,12 @@ export class IsochronicAudioEngine implements AudioEngine {
     const { context, node } = this.nodes;
     const profile = getRecommendationProfile(settings.profileId);
     const time = at ?? context.currentTime;
-    const setParam = (name: string, value: number) =>
-      node.parameters.get(name)?.setValueAtTime(value, time);
+    const setParam = (name: string, value: number) => {
+      const param = node.parameters.get(name);
+      // Live tuning can arrive before a pending sound switch reaches its fade minimum.
+      param?.cancelScheduledValues(context.currentTime);
+      param?.setValueAtTime(value, time);
+    };
 
     setParam('carrierHz', settings.carrierHz);
     setParam('modulationMode', this.getModulationMode(profile.modulationStyle));

@@ -137,6 +137,22 @@ describe('tracked sessions', () => {
     expect(screen.getByText('2件を読み取り、新しく2件を追加しました。')).toBeInTheDocument();
     expect(JSON.parse(window.localStorage.getItem('forty-hz-health-samples') ?? '[]')).toHaveLength(2);
   });
+
+  it('keeps an unimported Watch draft when switching tabs', async () => {
+    render(<App engine={createMockEngine()} />);
+    await finishSetup();
+    fireEvent.click(screen.getByRole('button', { name: '記録', exact: true }));
+    fireEvent.click(screen.getByText('Apple Watch 連携'));
+    const draft = 'HR,2026-10-01T10:15:00+09:00,68';
+    fireEvent.change(screen.getByLabelText('ヘルスケアデータの貼り付け'), { target: { value: draft } });
+    fireEvent.click(screen.getByRole('button', { name: '聴く', exact: true }));
+    expect(screen.queryByRole('button', { name: '貼り付けたテキストを取り込む' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '記録', exact: true }));
+    expect(screen.getByLabelText('ヘルスケアデータの貼り付け')).toHaveValue(draft);
+    expect(screen.getByText('Apple Watch 連携').closest('details')).toHaveAttribute('open');
+    fireEvent.click(screen.getByRole('button', { name: '貼り付けたテキストを取り込む' }));
+    expect(screen.getByText('1件を読み取り、新しく1件を追加しました。')).toBeInTheDocument();
+  });
 });
 
 describe('ReactionTest', () => {
