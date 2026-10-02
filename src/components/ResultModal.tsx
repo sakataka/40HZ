@@ -34,10 +34,11 @@ export function ResultModal({ record, arms, onClose }: ResultModalProps) {
         <h2 id="result-title">{getRecommendationProfile(record.profileId).label}の前後比較</h2>
 
         {record.condition ? (
-          <p className={`reveal-card reveal-${record.condition}`}>
-            今回流れていたのは <strong>{record.condition === 'active' ? '40 Hzの脈動（本物）' : 'ランダムな脈動（対照）'}</strong> でした。
-            <span>比較の蓄積: 40 Hz {arms.active}回 / 対照 {arms.sham}回</span>
-          </p>
+          <div className={`reveal-card reveal-${record.condition}`}>
+            <p className="reveal-label">今回流れていたのは</p>
+            <strong>{record.condition === 'active' ? '40 Hzの脈動（本物）' : 'ランダムな脈動（対照）'}</strong>
+            <p className="reveal-count">比較の蓄積: 40 Hz {arms.active}回 / 対照 {arms.sham}回</p>
+          </div>
         ) : null}
 
         <table className="stats-table">
