@@ -53,6 +53,12 @@ export function ResonanceTrace({ kind, breath, startedAt, live, clearCenter = fa
     let glow = 0.14;
     let colorCheckedAt = -Infinity;
     let drawnKey = '';
+    // When the breath source switches (session start/stop, or a switch to or from a breath guide),
+    // the level eases from where it was instead of jumping.
+    let followedBreath = false;
+    let heldLevel = 0;
+    let lastLevel: number | null = null;
+    let levelMix = 1;
 
     function resize() {
       const rect = canvas!.getBoundingClientRect();
@@ -79,12 +85,21 @@ export function ResonanceTrace({ kind, breath, startedAt, live, clearCenter = fa
       }
     }
 
-    function breathLevelAt(offsetSec: number): number {
+    function sourceLevelAt(offsetSec: number): number {
       const { breath: pattern, startedAt: start, live: isLive } = propsRef.current;
       if (pattern && start != null && isLive) {
         return breathPointAt((Date.now() - start) / 1000 - offsetSec, pattern).level;
       }
       return 0.84 + 0.04 * Math.sin(((clock - offsetSec) * Math.PI * 2) / 12);
+    }
+
+    function breathLevelAt(offsetSec: number): number {
+      const level = sourceLevelAt(offsetSec);
+      if (levelMix >= 1) {
+        return level;
+      }
+      const mix = 0.5 - 0.5 * Math.cos(Math.PI * levelMix);
+      return heldLevel + (level - heldLevel) * mix;
     }
 
     function point(u: number, t: number, level: number): [number, number] {
@@ -131,7 +146,14 @@ export function ResonanceTrace({ kind, breath, startedAt, live, clearCenter = fa
 
       const still = Boolean(reducedMotion?.matches);
       const followsBreath = Boolean(props.breath && props.startedAt != null && props.live);
+      if (followsBreath !== followedBreath) {
+        followedBreath = followsBreath;
+        // The first frame has nothing to ease from.
+        heldLevel = lastLevel ?? 0;
+        levelMix = lastLevel == null ? 1 : 0;
+      }
       morph = still ? 1 : Math.min(1, morph + dt / MORPH_SEC);
+      levelMix = still ? 1 : Math.min(1, levelMix + dt / MORPH_SEC);
       energy += ((props.live ? 1 : IDLE_ENERGY) - energy) * Math.min(1, dt * 1.4);
       if (!still) {
         clock += dt * (0.25 + 0.75 * energy);
@@ -157,6 +179,7 @@ export function ResonanceTrace({ kind, breath, startedAt, live, clearCenter = fa
       }
 
       const level = breathLevelAt(0);
+      lastLevel = level;
       stroke(clock, level, glow * brightness, 9 * ratio);
       stroke(clock, level, 0.95 * brightness, 1.6 * ratio);
       context!.globalAlpha = 1;
