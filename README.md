@@ -6,7 +6,7 @@ This project is a browser-based React and Vite app for short "brain reset" audio
 
 ### Environment
 
-- [Bun](https://bun.sh/) for package management and scripts
+- [Bun](https://bun.sh/) `1.4.2` (the `packageManager` version) for package management and scripts
 - A current desktop or mobile browser with Web Audio support
 
 ### Install and run
@@ -25,8 +25,10 @@ bun run test
 bun run build
 ```
 
-`bun run build` creates the root-relative build served by LocalWeb at
-`http://40hz.localhost/`. The GitHub Pages workflow uses `bun run build:pages`
+`bun run build` includes TypeScript checking and creates a root-relative build.
+LocalWeb's registered build command is `bun run build -- --base ./`; it creates
+relative asset URLs for both `http://40hz.localhost/` and the Tailscale
+`/apps/40hz/` route. The GitHub Pages workflow uses `bun run build:pages`
 to create the `/40HZ/`-prefixed deployment build.
 
 ### Basic runtime notes
@@ -35,6 +37,7 @@ to create the `/40HZ/`-prefixed deployment build.
 - Preferences are stored locally in `localStorage`.
 - Some mobile browsers may not keep playback stable while the screen is locked or the tab is heavily backgrounded.
 - The current app uses audio only. It does not include visual stimulation.
+- Display fonts are loaded from Google Fonts. If they cannot load, the interface uses system font fallbacks; audio and locally stored records do not depend on the font service.
 
 ### Safety and scope
 
@@ -52,7 +55,7 @@ The app has three tabs: `Listen`, `Records`, and `Settings`. The player stays av
 - On phones and narrow windows, the tabs sit in a bottom bar with a mini player above it. The mini player shows the current sound, the remaining time, and a play/stop button. Tapping it opens the full-screen player. Starting a breath guide opens the full-screen player automatically, because the guide is followed visually.
 - On wide windows, the tabs sit in the top bar and the full player is pinned in a right-hand column.
 
-The full player shows a 60-tick countdown dial around a slowly drifting oscilloscope-style trace (a Lissajous figure for 40 Hz, a circle that follows the breath for breath guides, a wavering loop for noises), the sound description and evidence label, the play/stop button, timer chips, the volume slider, and a collapsed `Tuning` section. Each mood group has its own accent color. The interface follows the system light/dark appearance. Animations are slow (breath pace or a 10-second ambient swell) and never flicker at 40 Hz. They are turned off when the system asks for reduced motion.
+The full player shows a 60-tick countdown dial around a slowly drifting oscilloscope-style trace (a Lissajous figure for 40 Hz, a circle that follows the breath for breath guides, a wavering loop for noises), the sound description and evidence label, the play/stop button, timer chips, the volume slider, and a collapsed `Tuning` section. Each mood group has its own accent color. The interface follows the system light/dark appearance. Animations drift slowly or follow the breath pace and never flicker at 40 Hz. With reduced motion, decorative traces stay still and transitions are minimized; the active breath circle keeps following the guide because it supplies the breathing instruction.
 
 ### Before You Start
 
@@ -79,14 +82,14 @@ The `Listen` tab is built for "pick a sound and listen". Tapping any sound card 
 
 #### Suggestion for now
 
-Two large cards at the top suggest sounds for the local time of day (morning: resonance breathing / 40 Hz, daytime: pink noise / rain, evening: cyclic sighing / ocean, late night: bedtime breathing / fire). Each suggestion plays with one tap. It is a static rule based on the clock, not a measurement.
+Two large cards at the top suggest sounds for the local time of day (morning: resonance breathing / 40 Hz, daytime: pink noise / rain, evening: cyclic sighing / ocean, late night: bedtime breathing / fire). The displayed clock and suggestions refresh together every 20 seconds and when returning to the tab. Each suggestion plays with one tap. It is a rule based on the clock, not a measurement.
 
 #### Sound library
 
 Sounds are grouped by what the listener wants right now. The evidence label of the selected sound is shown next to its description.
 
 - `Calm down`
-  - `Resonance breathing` (evidence: moderate): about 5.5 breaths per minute (4.5 s in, 6.5 s out). Pitch and loudness rise on the inhale and fall on the exhale, and an on-screen orb follows the same curve.
+  - `Resonance breathing` (evidence: moderate): about 5.5 breaths per minute (4.5 s in, 6.5 s out). Pitch and loudness rise on the inhale and fall on the exhale, and an on-screen circle follows the same curve.
   - `Cyclic sighing` (evidence: moderate): a double inhale followed by a long exhale, 5 minutes by default.
   - `Ocean (synthetic)`: brown noise with a slow 9-second swell.
   - `Breeze (synthetic)`: low-passed noise with slow, irregular gusts.
@@ -175,7 +178,7 @@ The current design is based on a small number of limited, human-facing reference
 
 That study informs two parts of the app:
 
-- the default `Recommended` mode uses a `sine`-style modulation profile
+- the default `40 Hz` preset uses a `sine`-style modulation profile
 - the evidence panel notes the eyes-closed result without treating it as a guarantee of a stronger or more useful effect
 
 The app does not treat this paper as proof of clinical benefit. It uses it only as a narrow cue for a conservative default mode.
@@ -199,7 +202,7 @@ This distinction matters because the stronger human interventional literature is
 That does not provide a direct parameter rule for this app, but it does support a cautious product stance:
 
 - the app starts from relatively low volume defaults
-- the `Gentle` mode keeps a softer entry point
+- the `40 Hz gentle` preset keeps a softer entry point
 - low starting volume is treated as a comfort feature rather than an evidence-backed treatment setting
 
 In other words, the app borrows the comfort lesson, not a claim of efficacy.

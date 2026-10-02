@@ -27,7 +27,18 @@ type ListenViewProps = {
 
 export function ListenView({ activeProfileId, playing, locked, blind, onSelect, onOpenRecords }: ListenViewProps) {
   const [showExploratory, setShowExploratory] = useState(false);
-  const [suggestion] = useState(() => suggestForHour(new Date().getHours()));
+  const [now, setNow] = useState(() => new Date());
+  const suggestion = suggestForHour(now.getHours());
+
+  useEffect(() => {
+    const refresh = () => setNow(new Date());
+    const timer = window.setInterval(refresh, 20_000);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, []);
 
   function renderTile(profile: RecommendationProfile) {
     const active = activeProfileId === profile.id;
@@ -66,7 +77,7 @@ export function ListenView({ activeProfileId, playing, locked, blind, onSelect, 
         <p className="hero-time">{suggestion.label}</p>
         <div className="hero-heading">
           <h1 id="app-title">{suggestion.note}</h1>
-          <HeroClock />
+          <HeroClock now={now} />
         </div>
 
         {blind ? (
@@ -153,18 +164,13 @@ export function Equalizer() {
   );
 }
 
-/** The local time the suggestions are based on, refreshed each minute. */
-function HeroClock() {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 20_000);
-    return () => window.clearInterval(timer);
-  }, []);
+/** Shows the same local time used to choose the suggestions. */
+function HeroClock({ now }: { now: Date }) {
   const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
   return (
     <p className="hero-clock">
       <span className="visually-hidden">現在時刻 </span>
-      <time dateTime={time}>{time}</time>
+      <time dateTime={now.toISOString()}>{time}</time>
     </p>
   );
 }

@@ -53,9 +53,10 @@ export function ResonanceTrace({ kind, breath, startedAt, live, clearCenter = fa
     let glow = 0.14;
     let colorCheckedAt = -Infinity;
     let drawnKey = '';
-    // When the breath source switches (session start/stop, or a switch to or from a breath guide),
+    // When the breath source switches (session start/stop, or a different breath pattern),
     // the level eases from where it was instead of jumping.
-    let followedBreath = false;
+    let followedPattern: BreathPattern | undefined;
+    let followedStart: number | null = null;
     let heldLevel = 0;
     let lastLevel: number | null = null;
     let levelMix = 1;
@@ -146,8 +147,11 @@ export function ResonanceTrace({ kind, breath, startedAt, live, clearCenter = fa
 
       const still = Boolean(reducedMotion?.matches);
       const followsBreath = Boolean(props.breath && props.startedAt != null && props.live);
-      if (followsBreath !== followedBreath) {
-        followedBreath = followsBreath;
+      const nextPattern = followsBreath ? props.breath : undefined;
+      const nextStart = followsBreath ? props.startedAt : null;
+      if (nextPattern !== followedPattern || nextStart !== followedStart) {
+        followedPattern = nextPattern;
+        followedStart = nextStart;
         // The first frame has nothing to ease from.
         heldLevel = lastLevel ?? 0;
         levelMix = lastLevel == null ? 1 : 0;
