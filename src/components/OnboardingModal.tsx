@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { TraceMark } from './TraceMark';
 import type { OutputMode, SoundSensitivity, UserContext } from '../features/session/types';
 
 type OnboardingModalProps = {
@@ -24,6 +25,7 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="setup-title">
       <div className="modal-card">
+        <TraceMark kind="lissajous" className="modal-mark" echoes={3} />
         <p className="step-label">はじめに ・ 1 / 2</p>
         <h2 id="setup-title">最初に2つだけ確認します</h2>
         <p className="hero-copy">控えめな初期音量を選ぶためだけに使います。あとから「設定」で変えられます。</p>

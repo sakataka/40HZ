@@ -16,8 +16,8 @@ export function SettingsView({ userContext, carrierHz, locked, onChangeContext, 
   return (
     <div className="view settings-view">
       <header className="view-header">
-        <p className="eyebrow">聞き方と、このアプリについて</p>
         <h1>設定</h1>
+        <p className="lede">聞く環境と、このアプリの根拠について。</p>
       </header>
 
       <section className="card" aria-labelledby="listening-title">

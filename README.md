@@ -52,7 +52,7 @@ The app has three tabs: `Listen`, `Records`, and `Settings`. The player stays av
 - On phones and narrow windows, the tabs sit in a bottom bar with a mini player above it. The mini player shows the current sound, the remaining time, and a play/stop button. Tapping it opens the full-screen player. Starting a breath guide opens the full-screen player automatically, because the guide is followed visually.
 - On wide windows, the tabs sit in the top bar and the full player is pinned in a right-hand column.
 
-The full player shows a countdown ring, the breath orb (for breath guides), the sound description and evidence label, the play/stop button, timer chips, the volume slider, and a collapsed `Tuning` section. Each mood group has its own accent color. The interface follows the system light/dark appearance. Animations are slow (breath pace or a 10-second ambient swell) and never flicker at 40 Hz. They are turned off when the system asks for reduced motion.
+The full player shows a 60-tick countdown dial around a slowly drifting oscilloscope-style trace (a Lissajous figure for 40 Hz, a circle that follows the breath for breath guides, a wavering loop for noises), the sound description and evidence label, the play/stop button, timer chips, the volume slider, and a collapsed `Tuning` section. Each mood group has its own accent color. The interface follows the system light/dark appearance. Animations are slow (breath pace or a 10-second ambient swell) and never flicker at 40 Hz. They are turned off when the system asks for reduced motion.
 
 ### Before You Start
 

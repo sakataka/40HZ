@@ -4,8 +4,9 @@ import { EVIDENCE_LABELS } from '../features/session/presets';
 import type { RecommendationProfile, SessionSettings, SessionState } from '../features/session/types';
 import type { TrackingMode } from '../features/tracking/types';
 import { SESSION_LIMITS } from '../lib/settings';
+import { traceKindOf } from '../features/session/trace';
 import { STAGE_LABELS, useBreathPoint } from './BreathGuide';
-import { SoundIcon } from './SoundIcon';
+import { ResonanceTrace } from './ResonanceTrace';
 
 const DURATION_OPTIONS = [5, 10, 15, 20, 30] as const;
 const STATUS_LABELS: Record<SessionState['status'], string> = {
@@ -19,8 +20,19 @@ const TRACKING_LABELS: Record<TrackingMode, string> = {
   checkin: '前後チェックあり',
   experiment: 'ブラインド比較',
 };
-const RING_RADIUS = 46;
-const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
+const TICK_COUNT = 60;
+const TICKS = Array.from({ length: TICK_COUNT }, (_, index) => {
+  const angle = (index / TICK_COUNT) * Math.PI * 2 - Math.PI / 2;
+  const major = index % 5 === 0;
+  const inner = major ? 44.2 : 45.6;
+  return {
+    major,
+    x1: 50 + Math.cos(angle) * inner,
+    y1: 50 + Math.sin(angle) * inner,
+    x2: 50 + Math.cos(angle) * 48.4,
+    y2: 50 + Math.sin(angle) * 48.4,
+  };
+});
 
 type NowPlayingProps = {
   profile: RecommendationProfile;
@@ -58,7 +70,7 @@ export function NowPlaying({
   const elapsedFraction = live ? Math.min(1, Math.max(0, 1 - sessionState.remainingMs / totalMs)) : 0;
   const startedAt = running && sessionState.endsAt != null ? sessionState.endsAt - totalMs : null;
   const breath = useBreathPoint(profile.breath, startedAt);
-  const orbScale = breath ? 0.5 + 0.5 * breath.level : live ? 0.62 : 0.56;
+  const litTicks = live ? Math.round(elapsedFraction * TICK_COUNT) : 0;
 
   return (
     <section
@@ -83,42 +95,42 @@ export function NowPlaying({
       </div>
 
       <div className="np-visual">
-        <svg className="np-ring" viewBox="0 0 100 100" aria-hidden="true">
-          <circle className="np-ring-track" cx="50" cy="50" r={RING_RADIUS} />
-          <circle
-            className="np-ring-progress"
-            cx="50"
-            cy="50"
-            r={RING_RADIUS}
-            strokeDasharray={RING_LENGTH}
-            strokeDashoffset={RING_LENGTH * (1 - elapsedFraction)}
-          />
+        <svg className="np-dial" viewBox="0 0 100 100" aria-hidden="true">
+          {TICKS.map((tick, index) => (
+            <line
+              key={index}
+              className={`np-tick${tick.major ? ' is-major' : ''}${index < litTicks ? ' is-lit' : ''}`}
+              x1={tick.x1}
+              y1={tick.y1}
+              x2={tick.x2}
+              y2={tick.y2}
+            />
+          ))}
         </svg>
-        <div
-          className={`np-orb${breath ? ' is-breath' : ''}${running && !breath ? ' is-ambient' : ''}`}
-          style={{ transform: `scale(${orbScale})` }}
-          aria-hidden="true"
+        <ResonanceTrace
+          kind={blind ? 'lissajous' : traceKindOf(profile)}
+          breath={profile.breath}
+          startedAt={startedAt}
+          live={running}
+          clearCenter={!breath}
         />
         <div className="np-center">
           {breath ? <strong className="np-stage" aria-live="off">{STAGE_LABELS[breath.stage]}</strong> : null}
-          <span className={breath ? 'np-time is-small' : 'np-time'}>{formatCountdown(sessionState.remainingMs)}</span>
+          <Countdown className={breath ? 'np-time is-small' : 'np-time'} milliseconds={sessionState.remainingMs} />
           <span className="np-time-label">{live ? '残り' : 'タイマー'}</span>
         </div>
       </div>
 
       <div className="np-info">
-        <span className="np-icon"><SoundIcon profileId={blind ? 'recommended' : profile.id} /></span>
-        <div>
-          <h2 id="now-playing-title">{blind ? '40 Hz／対照（非表示）' : profile.label}</h2>
-          <p>
-            {blind ? 'どちらの音かは終了後に表示されます。' : profile.description}
-            {' '}
-            <small className={`evidence-pill evidence-${profile.evidenceLevel}`}>
-              {EVIDENCE_LABELS[profile.evidenceLevel]}
-            </small>
-          </p>
-          <p className="np-hint">{listeningHint(profile)}</p>
-        </div>
+        <h2 id="now-playing-title">{blind ? '40 Hz／対照（非表示）' : profile.label}</h2>
+        <p>
+          {blind ? 'どちらの音かは終了後に表示されます。' : profile.description}
+          {' '}
+          <small className={`evidence-pill evidence-${profile.evidenceLevel}`}>
+            {EVIDENCE_LABELS[profile.evidenceLevel]}
+          </small>
+        </p>
+        <p className="np-hint">{listeningHint(profile)}</p>
       </div>
 
       <button
@@ -128,7 +140,7 @@ export function NowPlaying({
         disabled={live ? !running : !readyToStart || status !== 'idle'}
         onClick={() => (live ? void onStop() : onStart())}
       >
-        <span className="play-glyph" aria-hidden="true">{live ? '■' : '▶'}</span>
+        <PlayGlyph stop={live} />
         {live ? '停止' : '再生'}
       </button>
 
@@ -241,6 +253,29 @@ export function RangeControl({ label, value, min, max, step, displayValue, onCha
         onChange={(event) => onChange(Number(event.currentTarget.value))}
       />
     </label>
+  );
+}
+
+/** Each digit sits in a fixed-width cell so proportional display figures do not jitter. */
+function Countdown({ milliseconds, className }: { milliseconds: number; className: string }) {
+  const text = formatCountdown(milliseconds);
+  return (
+    <span className={className}>
+      <span className="visually-hidden">{text}</span>
+      {Array.from(text, (character, index) => (
+        <span key={index} className={character === ':' ? 'digit-colon' : 'digit'} aria-hidden="true">
+          {character}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+export function PlayGlyph({ stop }: { stop: boolean }) {
+  return (
+    <svg className="play-glyph" aria-hidden="true" width="14" height="14" viewBox="0 0 14 14">
+      {stop ? <rect x="2" y="2" width="10" height="10" rx="2" fill="currentColor" /> : <path d="M3.5 1.8v10.4a.8.8 0 0 0 1.2.7l8.3-5.2a.8.8 0 0 0 0-1.4L4.7 1.1a.8.8 0 0 0-1.2.7Z" fill="currentColor" />}
+    </svg>
   );
 }
 

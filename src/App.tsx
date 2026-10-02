@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { CalibrationModal } from './components/CalibrationModal';
 import { CheckInModal } from './components/CheckInModal';
 import { ListenView } from './components/ListenView';
@@ -11,6 +12,7 @@ import { SettingsView } from './components/SettingsView';
 import { TabBar, type AppTab } from './components/TabBar';
 import { sharedAudioEngine, type AudioEngine } from './audio/engine';
 import { getRecommendationProfile } from './features/session/presets';
+import { tracePath } from './features/session/trace';
 import { useSession } from './features/session/useSession';
 import { countArms } from './features/tracking/stats';
 import type { CheckIn, TrackingPrefs } from './features/tracking/types';
@@ -27,6 +29,7 @@ const MODAL_FOCUSABLE_SELECTOR = [
 ].join(',');
 
 const BLIND_PROFILE_ID = 'recommended';
+const BRAND_PATH = tracePath('lissajous', 24, 0);
 
 type AppProps = {
   engine?: AudioEngine;
@@ -109,6 +112,19 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
     if (compact && getRecommendationProfile(profileId).breath) {
       setPlayerOpen(true);
     }
+  }
+
+  /** Cross-fades between tabs where the browser supports view transitions. */
+  function changeTab(next: AppTab) {
+    if (next === tab) {
+      return;
+    }
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (!document.startViewTransition || reduceMotion) {
+      setTab(next);
+      return;
+    }
+    document.startViewTransition(() => flushSync(() => setTab(next)));
   }
 
   function closePlayer() {
@@ -232,12 +248,13 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
         <div className="app-main" aria-hidden={sheetOpen || undefined} inert={sheetOpen}>
           <header className="app-bar">
             <span className="brand" aria-label="40 Hz Audio">
-              <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 12h3l2.5-6 4 12 4-12L19 12h2" />
+              <svg aria-hidden="true" width="26" height="26" viewBox="-2 -2 28 28" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round">
+                <path d={BRAND_PATH} />
               </svg>
-              40 Hz <span>Audio</span>
+              <span className="brand-name">40 Hz</span>
+              <span className="brand-sub">Audio</span>
             </span>
-            {compact ? null : <TabBar current={tab} onChange={setTab} />}
+            {compact ? null : <TabBar current={tab} onChange={changeTab} />}
           </header>
 
           {tab === 'listen' ? (
@@ -247,7 +264,7 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
               locked={soundsLocked}
               blind={blind}
               onSelect={selectProfile}
-              onOpenRecords={() => setTab('records')}
+              onOpenRecords={() => changeTab('records')}
             />
           ) : null}
 
@@ -294,7 +311,7 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
                 onStart={handleStart}
                 onStop={stopSession}
               />
-              <TabBar current={tab} onChange={setTab} />
+              <TabBar current={tab} onChange={changeTab} />
             </div>
           </>
         ) : (

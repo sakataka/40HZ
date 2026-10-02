@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   EVIDENCE_LABELS,
   getRecommendationProfile,
@@ -6,8 +6,11 @@ import {
   RECOMMENDATION_PROFILES,
   suggestForHour,
 } from '../features/session/presets';
+import { traceKindOf } from '../features/session/trace';
 import type { RecommendationProfile } from '../features/session/types';
+import { PlayGlyph } from './NowPlaying';
 import { SoundIcon } from './SoundIcon';
+import { TraceMark } from './TraceMark';
 
 const EXPERIMENTAL_PROFILES = RECOMMENDATION_PROFILES.filter(
   (profile) => profile.evidenceLevel === 'experimental',
@@ -44,14 +47,14 @@ export function ListenView({ activeProfileId, playing, locked, blind, onSelect, 
         <span className="tile-body">
           <span className="tile-title">{profile.label}</span>
           <span className="tile-summary">{profile.summary}</span>
-          <span className="tile-meta">
-            {isPlaying ? <span className="tile-now">再生中・タップで停止</span> : `${profile.durationMinutes}分`}
-            {profile.evidenceLevel !== 'limited' ? (
-              <small className={`evidence-pill evidence-${profile.evidenceLevel}`}>
-                {EVIDENCE_LABELS[profile.evidenceLevel]}
-              </small>
-            ) : null}
-          </span>
+        </span>
+        <span className="tile-meta">
+          {isPlaying ? <span className="tile-now">再生中</span> : <span className="tile-minutes">{profile.durationMinutes}<small>分</small></span>}
+          {profile.evidenceLevel !== 'limited' ? (
+            <small className={`evidence-pill evidence-${profile.evidenceLevel}`}>
+              {EVIDENCE_LABELS[profile.evidenceLevel]}
+            </small>
+          ) : null}
         </span>
       </button>
     );
@@ -59,45 +62,50 @@ export function ListenView({ activeProfileId, playing, locked, blind, onSelect, 
 
   return (
     <div className="view listen-view">
-      <header className="view-header">
-        <p className="eyebrow">{suggestion.label}</p>
-        <h1 id="app-title">{suggestion.note}</h1>
-      </header>
+      <section className="listen-hero" aria-labelledby="app-title">
+        <p className="hero-time">{suggestion.label}</p>
+        <div className="hero-heading">
+          <h1 id="app-title">{suggestion.note}</h1>
+          <HeroClock />
+        </div>
 
-      {blind ? (
-        <div className="notice-card" role="note">
-          <strong>ブラインド比較中</strong>
-          <p>音は「40 Hz／対照」に固定されています。どちらが流れたかは終了後に表示されます。</p>
-          <button className="text-button" type="button" onClick={onOpenRecords}>
-            記録の設定を開く
-          </button>
-        </div>
-      ) : (
-        <div className="suggestion-row" role="group" aria-label="今のおすすめ">
-          {suggestion.profileIds.map((profileId) => {
-            const profile = getRecommendationProfile(profileId);
-            const isPlaying = activeProfileId === profileId && playing;
-            return (
-              <button
-                key={profileId}
-                className={`suggestion-card mood-${profile.mood}${isPlaying ? ' is-playing' : ''}`}
-                type="button"
-                disabled={locked}
-                onClick={() => onSelect(profileId)}
-              >
-                <span className="suggestion-icon">
-                  {isPlaying ? <Equalizer /> : <SoundIcon profileId={profileId} size={28} />}
-                </span>
-                <span className="suggestion-title">{profile.label}</span>
-                <span className="suggestion-summary">{profile.summary}</span>
-                <span className="suggestion-play" aria-hidden="true">
-                  {isPlaying ? '再生中' : `▶ ${profile.durationMinutes}分`}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+        {blind ? (
+          <div className="notice-card" role="note">
+            <strong>ブラインド比較中</strong>
+            <p>音は「40 Hz／対照」に固定されています。どちらが流れたかは終了後に表示されます。</p>
+            <button className="text-button" type="button" onClick={onOpenRecords}>
+              記録の設定を開く
+            </button>
+          </div>
+        ) : (
+          <div className="suggestion-row" role="group" aria-label="今のおすすめ">
+            {suggestion.profileIds.map((profileId) => {
+              const profile = getRecommendationProfile(profileId);
+              const isPlaying = activeProfileId === profileId && playing;
+              return (
+                <button
+                  key={profileId}
+                  className={`suggestion-card mood-${profile.mood}${isPlaying ? ' is-playing' : ''}`}
+                  type="button"
+                  disabled={locked}
+                  onClick={() => onSelect(profileId)}
+                >
+                  <TraceMark kind={traceKindOf(profile)} className="suggestion-trace" />
+                  <span className="suggestion-icon">
+                    {isPlaying ? <Equalizer /> : <SoundIcon profileId={profileId} size={26} />}
+                  </span>
+                  <span className="suggestion-title">{profile.label}</span>
+                  <span className="suggestion-summary">{profile.summary}</span>
+                  <span className="suggestion-play" aria-hidden="true">
+                    <PlayGlyph stop={isPlaying} />
+                    {isPlaying ? '再生中' : `${profile.durationMinutes}分`}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       <div className="sound-library" role="group" aria-label="サウンド一覧">
         {MOOD_GROUPS.map((group) => (
@@ -142,5 +150,21 @@ export function Equalizer() {
       <span />
       <span />
     </span>
+  );
+}
+
+/** The local time the suggestions are based on, refreshed each minute. */
+function HeroClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 20_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+  return (
+    <p className="hero-clock">
+      <span className="visually-hidden">現在時刻 </span>
+      <time dateTime={time}>{time}</time>
+    </p>
   );
 }

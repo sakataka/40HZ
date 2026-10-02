@@ -42,8 +42,8 @@ export function RecordsView({
   return (
     <div className="view records-view">
       <header className="view-header">
-        <p className="eyebrow">任意 ・ このブラウザ内にだけ保存</p>
         <h1>記録と比較</h1>
+        <p className="lede">任意です。記録はこのブラウザの中にだけ保存されます。</p>
       </header>
 
       <section className="card" aria-labelledby="tracking-mode-title">

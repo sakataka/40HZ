@@ -1,6 +1,6 @@
 import type { RecommendationProfile, SessionState } from '../features/session/types';
 import { Equalizer } from './ListenView';
-import { formatCountdown } from './NowPlaying';
+import { formatCountdown, PlayGlyph } from './NowPlaying';
 import { SoundIcon } from './SoundIcon';
 
 type MiniPlayerProps = {
@@ -59,7 +59,7 @@ export function MiniPlayer({
         disabled={live ? !running : !readyToStart || status !== 'idle'}
         onClick={() => (live ? void onStop() : onStart())}
       >
-        <span aria-hidden="true">{live ? '■' : '▶'}</span>
+        <PlayGlyph stop={live} />
       </button>
     </div>
   );

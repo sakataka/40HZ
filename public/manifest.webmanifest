@@ -1,11 +1,11 @@
 {
   "name": "40 Hz Audio",
   "short_name": "40 Hz",
-  "description": "40 Hz のリスニングセッションを管理するブラウザアプリです。",
+  "description": "40 Hz の音、呼吸ガイド、ノイズで短く頭をリセットするためのブラウザアプリです。",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#f4f3ef",
-  "theme_color": "#f4f3ef",
+  "background_color": "#11132a",
+  "theme_color": "#11132a",
   "icons": [
     {
       "src": "icon.svg",
