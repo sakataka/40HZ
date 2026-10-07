@@ -12,7 +12,7 @@ export const SAFETY_POINTS = [
   '成人が静かな環境で自分用に使うことを前提にしています。',
   '不快感、めまい、頭痛があればすぐ停止してください。',
   '音量は低く、はっきり聞こえる最小限から始めてください。',
-  '運転中、作業中、周囲への注意が必要な状況では使わないでください。',
+  '運転中、機械の操作中など、周囲への注意が必要な状況では使わないでください。',
   '発作歴など医療上の事情がある場合は、使用前に専門家へ相談してください。',
 ];
 
@@ -28,7 +28,7 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
         <TraceMark kind="lissajous" className="modal-mark" echoes={3} />
         <p className="step-label">はじめに ・ 1 / 2</p>
         <h2 id="setup-title">最初に2つだけ確認します</h2>
-        <p className="hero-copy">控えめな初期音量を選ぶためだけに使います。あとから「設定」で変えられます。</p>
+        <p className="hero-copy">控えめな初期音量と背景ノイズを選ぶためだけに使います。あとから「設定」で変えられます。</p>
         <div className="modal-grid">
           <fieldset className="option-group choice-cards">
             <legend>音への敏感さ</legend>

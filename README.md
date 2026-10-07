@@ -1,6 +1,6 @@
 # 40Hz Audio Sessions
 
-This project is a browser-based React and Vite app for short "brain reset" audio sessions: 40 Hz isochronic pulses, paced-breathing guides, and masking noise. Each program is labelled by strength of evidence, and the app can optionally record before/after check-ins and run blinded self-experiments (40 Hz vs. an aperiodic sham) so the user can test what actually works for them. It is intended as a research-informed tool for general adult self-use. It is not presented as a medical device, a treatment, or a clinically validated intervention.
+This project is a browser-based React and Vite app for short "brain reset" audio sessions: 40 Hz isochronic pulses, paced-breathing guides, and masking noise. Each program is labelled by strength of evidence for related methods, and the app can optionally record before/after check-ins and run blinded self-experiments (40 Hz vs. an aperiodic sham) so the user can explore their own changes. The labels do not represent validation of this app or its fixed settings. It is intended as a research-informed tool for general adult self-use. It is not presented as a medical device, a treatment, or a clinically validated intervention.
 
 ## Getting Started
 
@@ -45,6 +45,9 @@ to create the `/40HZ/`-prefixed deployment build.
 - It is written for general adult self-use, not supervised medical use.
 - Users should stop if they notice discomfort, dizziness, or headache.
 - Volume should remain at the lowest level that is clearly audible and comfortable.
+- Do not use during driving, operating machinery, or other situations that require attention to the surroundings. Users with a seizure history or other medical concerns should consult a healthcare professional before use.
+
+These are precautionary use instructions, not a clinically established safety protocol for the app. [Wang et al., 2024](https://pubmed.ncbi.nlm.nih.gov/38402805/) reported discomfort with 40 Hz sound in some participants; [Chan et al., 2022](https://pubmed.ncbi.nlm.nih.gov/36454969/) studied supervised audiovisual stimulation with participant selection and safety monitoring. Neither establishes the safety of this audio-only app for all users.
 
 ## Features and Screen Walkthrough
 
@@ -104,7 +107,9 @@ Sounds are grouped by what the listener wants right now. The evidence label of t
 
 Noise and nature sounds are rated `limited`.
 
-The breath guides are rated highest because slow and exhale-weighted breathing has repeated human evidence. The sound only paces the breathing. The effect is attributed to the breathing, not to the sound.
+The breath guides are rated highest among the app's methods because of human evidence for related breathing practices. [Zaccaro et al., 2018](https://pubmed.ncbi.nlm.nih.gov/30245619/) reviewed slow breathing, including reports of increased HRV and reduced anxiety. [Lehrer et al., 2020](https://pubmed.ncbi.nlm.nih.gov/32385728/) evaluated HRV biofeedback, which includes physiological feedback absent from this fixed-pace guide. [Balban et al., 2023](https://pubmed.ncbi.nlm.nih.gov/36630953/) compared daily 5-minute breathing exercises with mindfulness over a month: cyclic sighing improved positive affect and reduced respiratory rate relative to mindfulness, but no significant improvements in HRV or sleep were found. These studies do not directly validate the app's fixed breath timings or a sleep benefit from the bedtime preset. The sound only paces the breathing; the research concerns breathing practices rather than an independent effect of the sound.
+
+For noise, [Nigg et al., 2024](https://pubmed.ncbi.nlm.nih.gov/38428577/) found a small task-performance benefit from white/pink noise in children and young adults with ADHD or elevated ADHD symptoms, and a negative effect in non-ADHD comparison groups. No brown-noise studies were included. [Buxton et al., 2021](https://pubmed.ncbi.nlm.nih.gov/33753555/) synthesized benefits of natural sounds, which do not directly validate the app's synthetic ocean, rain, wind, or fire. [Albulescu et al., 2022](https://pubmed.ncbi.nlm.nih.gov/36044424/) concerns breaks of up to 10 minutes, not the efficacy of these sounds.
 
 #### Session controls
 
@@ -116,12 +121,12 @@ The recording mode is chosen at the top of the `Records` tab: `Off` (the default
 
 ### Check-ins and blind comparison
 
-Recording is off by default, so playback starts immediately. Settings saved by older versions, where check-ins were the default, are reset to off once. With `Check-in` mode, `Start` first opens a short form: `clarity`, `mood`, and `fatigue` on 0–10 sliders, and optionally a 60-second reaction-time test modelled on the brief psychomotor vigilance test (PVT-B, 1–4 s random intervals, lapses at 500 ms or more). The same form appears after the session ends or is stopped, and a result card shows the before/after change. `Play without recording` skips the form.
+Recording is off by default, so playback starts immediately. Settings saved by older versions, where check-ins were the default, are reset to off once. With `Check-in` mode, `Start` first opens a short form: `clarity`, `mood`, and `fatigue` on 0–10 sliders, and optionally a 60-second reaction-time test inspired by the brief psychomotor vigilance test (PVT-B). The app uses 1–4 s random intervals and counts lapses at 500 ms or more. [Basner et al., 2011](https://pubmed.ncbi.nlm.nih.gov/22025811/) validated a 3-minute PVT-B and used a 355 ms lapse threshold in its sensitivity comparison; that validation does not transfer to this 60-second browser test. The same form appears after the session ends or is stopped, and a result card shows the before/after change. `Play without recording` skips the form.
 
 `Blind comparison` locks the sound to `40 Hz` and assigns each session to one of two arms without showing which:
 
 - `active`: the normal 40 Hz sine pulse
-- `sham`: pulses with the same envelope and loudness but random intervals (12.5–37.5 ms, mean 25 ms), following the random-frequency control used in Martorell et al., 2019
+- `sham`: pulses with the same envelope profile, base tone, and volume settings but random intervals (12.5–37.5 ms, mean 25 ms). The idea of a random-stimulation control draws on [Martorell et al., 2019](https://pubmed.ncbi.nlm.nih.gov/30879788/), a mouse study; the app does not reproduce its stimuli or constitute a validated human control protocol.
 
 Arms are block-randomized in groups of four (two of each) and revealed after the post check-in. Once each arm has at least three completed sessions, the `Records` tab shows for each metric the mean improvement per arm, the difference with a Welch 95% confidence interval, and a plain verdict. Sessions stopped before the timer ends are kept but excluded from the analysis. Open-label check-ins are summarized per preset separately.
 
@@ -151,7 +156,7 @@ Direct base-tone editing stays in the player's `Tuning` section so it is availab
 The `About this app and sources` section in `Settings` states the current evidence position in narrow terms:
 
 - evidence for audio-only consumer use is limited
-- some EEG paradigms observed stronger 40 Hz responses in eyes-closed or low-arousal conditions
+- an EEG experiment observed the strongest prefrontal 40 Hz response among its tested conditions with sinusoidal sound and eyes closed
 - the literature is too heterogeneous to justify age- or sex-based auto-tuning
 
 The source list links to the studies used for this framing and labels them by scope rather than treating them as direct validation of the app.
@@ -178,10 +183,10 @@ The current design is based on a small number of limited, human-facing reference
 
 That study informs two parts of the app:
 
-- the default `40 Hz` preset uses a `sine`-style modulation profile
+- the default `40 Hz` preset uses a `sine`-style modulation profile, as an app design choice rather than a reproduction of the study's sound
 - the evidence panel notes the eyes-closed result without treating it as a guarantee of a stronger or more useful effect
 
-The app does not treat this paper as proof of clinical benefit. It uses it only as a narrow cue for a conservative default mode.
+The app does not treat this paper as proof of clinical benefit or validation of its waveform. Its audible base tone (220 Hz by default) is amplitude-modulated at 40 Hz; matching a study's nominal frequency or waveform label alone does not establish equivalence. The paper is used as background for exploring 40 Hz sound and for the eyes-closed note.
 
 #### 2. Human clinical interest in sensory gamma stimulation
 
@@ -236,7 +241,7 @@ The source list is intended to show where the app's framing comes from, not to i
 
 In practical terms:
 
-- the EEG entrainment paper informs the default pulse style and the eyes-closed note in the evidence panel
+- the EEG entrainment paper provides background for exploring 40 Hz sound and the eyes-closed note in the evidence panel, without validating the app's pulse style
 - the audiovisual Alzheimer's study supports the broader research relevance of `40 Hz` sensory stimulation
 - the acceptability study supports a more conservative comfort posture for sound-based use
 - the lifespan review supports the decision to avoid demographic auto-tuning

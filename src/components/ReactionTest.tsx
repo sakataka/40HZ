@@ -98,7 +98,7 @@ export function ReactionTest({ durationSec = REACTION_TEST_SEC, onComplete }: Re
     return (
       <div className="reaction-intro">
         <p className="hero-copy">
-          {durationSec}秒間、枠が光ったらすぐに押します。眠気や集中の指標として使われる反応時間テスト（PVT）の簡易版です。
+          {durationSec}秒間、枠が光ったらすぐに押します。眠気に伴う注意力の変化を調べる反応時間テスト（PVT）を参考にした簡易テストです。研究で検証された3分版（PVT-B）とは実施時間が異なり、同じ妥当性が確認されたものではありません。
         </p>
         <button className="primary-button" type="button" onClick={begin} data-initial-focus>
           反応テストを始める
