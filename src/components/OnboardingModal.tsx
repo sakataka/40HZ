@@ -5,6 +5,8 @@ import type { OutputMode, SoundSensitivity, UserContext } from '../features/sess
 type OnboardingModalProps = {
   defaultContext: UserContext;
   onComplete: (context: Omit<UserContext, 'completedAt'>) => void;
+  onCancel?: () => void;
+  needsToneCheck?: boolean;
 };
 
 export const SAFETY_POINTS = [
@@ -16,7 +18,7 @@ export const SAFETY_POINTS = [
   '発作歴など医療上の事情がある場合は、使用前に専門家へ相談してください。',
 ];
 
-export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalProps) {
+export function OnboardingModal({ defaultContext, onComplete, onCancel, needsToneCheck = true }: OnboardingModalProps) {
   const [soundSensitivity, setSoundSensitivity] = useState<SoundSensitivity>(
     defaultContext.soundSensitivity,
   );
@@ -26,7 +28,7 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="setup-title">
       <div className="modal-card">
         <TraceMark kind="lissajous" className="modal-mark" echoes={3} />
-        <p className="step-label">はじめに ・ 1 / 2</p>
+        <p className="step-label">{needsToneCheck ? 'はじめに ・ 1 / 2' : '聴く前に'}</p>
         <h2 id="setup-title">最初に2つだけ確認します</h2>
         <p className="hero-copy">控えめな初期音量と背景ノイズを選ぶためだけに使います。あとから「設定」で変えられます。</p>
         <div className="modal-grid">
@@ -87,6 +89,7 @@ export function OnboardingModal({ defaultContext, onComplete }: OnboardingModalP
         <p className="fine-print">医療機器ではありません。不快感・めまい・頭痛があればすぐ停止してください。</p>
 
         <div className="modal-footer">
+          {onCancel ? <button className="secondary-button" type="button" onClick={onCancel}>音選びに戻る</button> : null}
           <button
             className="primary-button"
             type="button"

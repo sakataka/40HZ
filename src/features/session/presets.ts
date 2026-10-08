@@ -156,26 +156,6 @@ export const EVIDENCE_LABELS: Record<EvidenceLevel, string> = {
   experimental: '試験的',
 };
 
-export type TimeSuggestion = {
-  label: string;
-  note: string;
-  profileIds: [string, string];
-};
-
-/** Light-touch suggestions by local time of day; nothing is measured or stored. */
-export function suggestForHour(hour: number): TimeSuggestion {
-  if (hour >= 5 && hour < 11) {
-    return { label: '朝', note: '一日の始まりに、呼吸を整えてから', profileIds: ['breath-resonance', 'recommended'] };
-  }
-  if (hour >= 11 && hour < 17) {
-    return { label: '日中', note: '作業の背景や、合間の切り替えに', profileIds: ['noise-pink', 'noise-rain'] };
-  }
-  if (hour >= 17 && hour < 22) {
-    return { label: '夕方〜夜', note: '一日の緊張をほどくなら', profileIds: ['breath-sigh', 'noise-ocean'] };
-  }
-  return { label: '夜ふけ', note: '眠る前に', profileIds: ['breath-bedtime', 'noise-fire'] };
-}
-
 export function getRecommendationProfile(profileId: string): RecommendationProfile {
   return (
     RECOMMENDATION_PROFILES.find((profile) => profile.id === profileId)

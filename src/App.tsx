@@ -12,7 +12,6 @@ import { SettingsView } from './components/SettingsView';
 import { TabBar, type AppTab } from './components/TabBar';
 import { sharedAudioEngine, type AudioEngine } from './audio/engine';
 import { getRecommendationProfile } from './features/session/presets';
-import { tracePath } from './features/session/trace';
 import { useSession } from './features/session/useSession';
 import { countArms } from './features/tracking/stats';
 import type { CheckIn, TrackingPrefs } from './features/tracking/types';
@@ -29,7 +28,6 @@ const MODAL_FOCUSABLE_SELECTOR = [
 ].join(',');
 
 const BLIND_PROFILE_ID = 'recommended';
-const BRAND_PATH = tracePath('lissajous', 24, 0);
 
 type AppProps = {
   engine?: AudioEngine;
@@ -48,6 +46,7 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
     resetCalibration,
     settings,
     sessionState,
+    sessionError,
     applyProfile,
     startSession,
     stopSession,
@@ -55,9 +54,10 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
     updateSettings,
     userContext,
   } = useSession(engine, { onSessionEnd: tracking.handleSessionEnd });
+  const [setupPrompt, setSetupPrompt] = useState(false);
   const { flow } = tracking;
   const trackingModalOpen = flow.step === 'pre' || flow.step === 'post' || flow.step === 'result';
-  const modalOpen = !setupComplete || !calibrationComplete || trackingModalOpen;
+  const modalOpen = (setupPrompt && (!setupComplete || !calibrationComplete)) || trackingModalOpen;
   const blind = tracking.prefs.mode === 'experiment';
   const compact = useMediaQuery('(max-width: 959px)');
   const [tab, setTab] = useState<AppTab>('listen');
@@ -69,19 +69,26 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
   const idle = sessionState.status === 'idle';
   const running = sessionState.status === 'running';
   // Without recording, tapping a sound while playing switches to it on the fly.
-  const soundsLocked = !readyToStart
-    || blind
+  const soundsLocked = blind
     || sessionState.status === 'starting'
     || sessionState.status === 'stopping'
     || (running && tracking.prefs.mode !== 'off');
 
   function handleStart() {
+    if (!readyToStart) {
+      setSetupPrompt(true);
+      return;
+    }
     if (tracking.prefs.mode === 'off') {
       void startSession();
       return;
     }
     tracking.beginPre();
   }
+
+  useEffect(() => {
+    if (readyToStart) setSetupPrompt(false);
+  }, [readyToStart]);
 
   async function startTrackedSession(pre: CheckIn | undefined) {
     const condition = tracking.beginRun(settings.profileId, pre);
@@ -231,7 +238,8 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
       profile={activeProfile}
       settings={settings}
       sessionState={sessionState}
-      readyToStart={readyToStart}
+      readyToStart={readyToStart || !setupPrompt}
+      error={sessionError}
       blind={blind}
       trackingMode={tracking.prefs.mode}
       sheet={compact}
@@ -247,12 +255,9 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
       <div className="app-content" aria-hidden={modalOpen || undefined} inert={modalOpen}>
         <div className="app-main" aria-hidden={sheetOpen || undefined} inert={sheetOpen}>
           <header className="app-bar">
-            <span className="brand" aria-label="40 Hz Audio">
-              <svg aria-hidden="true" width="26" height="26" viewBox="-2 -2 28 28" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round">
-                <path d={BRAND_PATH} />
-              </svg>
-              <span className="brand-name">40 Hz</span>
-              <span className="brand-sub">Audio</span>
+            <span className="brand" aria-label="40Hz 音のよりみち">
+              <span className="brand-name">40Hz</span>
+              <span className="brand-sub">音のよりみち</span>
             </span>
             {compact ? null : <TabBar current={tab} onChange={changeTab} />}
           </header>
@@ -292,7 +297,10 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
               carrierHz={settings.carrierHz}
               locked={!idle}
               onChangeContext={completeOnboarding}
-              onResetCalibration={resetCalibration}
+              onResetCalibration={() => {
+                setSetupPrompt(true);
+                return resetCalibration();
+              }}
             />
           ) : null}
         </div>
@@ -301,11 +309,12 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
           <>
             {sheetOpen ? <div className="player-sheet">{nowPlaying}</div> : null}
             <div className="dock" ref={miniOpenRef} aria-hidden={sheetOpen || undefined} inert={sheetOpen}>
+              {sessionError && !sheetOpen ? <p className="mini-error" role="alert">{sessionError}</p> : null}
               <MiniPlayer
                 profile={activeProfile}
                 sessionState={sessionState}
                 durationMinutes={settings.durationMinutes}
-                readyToStart={readyToStart}
+                readyToStart={readyToStart || !setupPrompt}
                 blind={blind}
                 onOpen={() => setPlayerOpen(true)}
                 onStart={handleStart}
@@ -350,11 +359,19 @@ export default function App({ engine = sharedAudioEngine, reactionDurationSec }:
         <ResultModal record={flow.record} arms={countArms(tracking.records)} onClose={tracking.cancel} />
       ) : null}
 
-      {!setupComplete ? (
-        <OnboardingModal defaultContext={userContext} onComplete={completeOnboarding} />
+      {setupPrompt && !setupComplete ? (
+        <OnboardingModal
+          defaultContext={userContext}
+          needsToneCheck={activeProfile.program === 'gamma'}
+          onComplete={(context) => {
+            completeOnboarding(context);
+            if (activeProfile.program !== 'gamma') void completeCalibration(settings.carrierHz);
+          }}
+          onCancel={() => setSetupPrompt(false)}
+        />
       ) : null}
 
-      {setupComplete && !calibrationComplete ? (
+      {setupPrompt && setupComplete && !calibrationComplete ? (
         <CalibrationModal
           busy={calibrationBusy}
           previewBaseToneHz={previewBaseToneHz}

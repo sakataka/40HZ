@@ -47,6 +47,7 @@ export function useSession(engine: AudioEngine, { onSessionEnd }: UseSessionOpti
   }));
   const [previewBaseToneHz, setPreviewBaseToneHz] = useState<number | null>(null);
   const [audioOperation, setAudioOperation] = useState<AudioOperation>('idle');
+  const [sessionError, setSessionError] = useState<string | null>(null);
 
   const settingsRef = useRef(settings);
   const sessionStateRef = useRef(sessionState);
@@ -171,6 +172,7 @@ export function useSession(engine: AudioEngine, { onSessionEnd }: UseSessionOpti
       ...previous,
       status: 'starting',
     }));
+    setSessionError(null);
 
     try {
       await stopPreviewAudio();
@@ -188,6 +190,7 @@ export function useSession(engine: AudioEngine, { onSessionEnd }: UseSessionOpti
       }));
       return true;
     } catch {
+      setSessionError('音を再生できませんでした。もう一度再生を押してください。');
       const refreshedSettings = settingsRef.current;
       setSessionState((previous) => ({
         ...previous,
@@ -361,6 +364,7 @@ export function useSession(engine: AudioEngine, { onSessionEnd }: UseSessionOpti
     previewBaseToneHz,
     resetCalibration,
     sessionState,
+    sessionError,
     settings,
     setupComplete,
     startSession,

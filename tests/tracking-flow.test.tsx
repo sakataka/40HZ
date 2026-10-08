@@ -14,6 +14,7 @@ function createMockEngine(): AudioEngine {
 }
 
 async function finishSetup() {
+  fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
   fireEvent.click(screen.getByRole('button', { name: 'この設定で進む' }));
   fireEvent.click(screen.getByRole('button', { name: 'スキップして 220 Hz を使う' }));
   await waitFor(() => expect(screen.getByRole('button', { name: 'セッション開始' })).toBeEnabled());

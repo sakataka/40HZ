@@ -1,11 +1,11 @@
 {
-  "name": "40 Hz Audio",
+  "name": "40Hz 音のよりみち",
   "short_name": "40 Hz",
-  "description": "40 Hz の音、呼吸ガイド、ノイズで短く頭をリセットするためのブラウザアプリです。",
+  "description": "気分や場面に合わせて、40Hz・呼吸ガイド・自然音や音楽を選ぶ場所。",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#11132a",
-  "theme_color": "#11132a",
+  "background_color": "#f6f5ef",
+  "theme_color": "#f6f5ef",
   "icons": [
     {
       "src": "icon.svg",

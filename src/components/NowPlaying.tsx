@@ -35,6 +35,7 @@ const TICKS = Array.from({ length: TICK_COUNT }, (_, index) => {
 });
 
 type NowPlayingProps = {
+  error?: string | null;
   profile: RecommendationProfile;
   settings: SessionSettings;
   sessionState: SessionState;
@@ -50,6 +51,7 @@ type NowPlayingProps = {
 };
 
 export function NowPlaying({
+  error,
   profile,
   settings,
   sessionState,
@@ -74,7 +76,7 @@ export function NowPlaying({
 
   return (
     <section
-      className={`now-playing mood-${blind ? 'focus' : profile.mood}${sheet ? ' is-sheet' : ''}${live ? ' is-live' : ''}`}
+      className={`now-playing mood-${blind ? 'focus' : profile.mood}${blind || profile.program === 'gamma' ? ' is-gamma' : ''}${sheet ? ' is-sheet' : ''}${live ? ' is-live' : ''}`}
       aria-labelledby="now-playing-title"
     >
       {sheet ? (
@@ -86,6 +88,8 @@ export function NowPlaying({
           </button>
         </div>
       ) : null}
+
+      <h2 className="player-heading">あなたの音の時間</h2>
 
       <div className="np-head">
         <span className={`np-status${running ? ' is-playing' : ''}`} role="status">
@@ -108,7 +112,7 @@ export function NowPlaying({
           ))}
         </svg>
         <ResonanceTrace
-          kind={blind ? 'lissajous' : traceKindOf(profile)}
+          kind={blind || profile.program === 'gamma' ? 'pink' : traceKindOf(profile)}
           breath={profile.breath}
           startedAt={startedAt}
           live={running}
@@ -143,6 +147,7 @@ export function NowPlaying({
         <PlayGlyph stop={live} />
         {live ? '停止' : '再生'}
       </button>
+      {error ? <p className="playback-error" role="alert">{error}</p> : null}
 
       <div className="np-controls">
         <div>

@@ -1,6 +1,6 @@
-# 40Hz Audio Sessions
+# 40Hz · 音のよりみち
 
-This project is a browser-based React and Vite app for short "brain reset" audio sessions: 40 Hz isochronic pulses, paced-breathing guides, and masking noise. Each program is labelled by strength of evidence for related methods, and the app can optionally record before/after check-ins and run blinded self-experiments (40 Hz vs. an aperiodic sham) so the user can explore their own changes. The labels do not represent validation of this app or its fixed settings. It is intended as a research-informed tool for general adult self-use. It is not presented as a medical device, a treatment, or a clinically validated intervention.
+A Japanese sound-curation site for choosing something comfortable to listen to in everyday situations. Scene filters select sounds and explain why they were picked, alongside links to music, nature-sound and guided-meditation services. The built-in player retains 40 Hz amplitude-modulated tones, breathing guides and synthetic nature sounds. Research notes distinguish study findings from editorial suggestions; the site is not a medical device or a clinically validated intervention. Optional check-ins, blinded comparisons and existing browser records remain available.
 
 ## Getting Started
 
@@ -58,11 +58,11 @@ The app has three tabs: `Listen`, `Records`, and `Settings`. The player stays av
 - On phones and narrow windows, the tabs sit in a bottom bar with a mini player above it. The mini player shows the current sound, the remaining time, and a play/stop button. Tapping it opens the full-screen player. Starting a breath guide opens the full-screen player automatically, because the guide is followed visually.
 - On wide windows, the tabs sit in the top bar and the full player is pinned in a right-hand column.
 
-The full player shows a 60-tick countdown dial around a slowly drifting oscilloscope-style trace (a Lissajous figure for 40 Hz, a circle that follows the breath for breath guides, a wavering loop for noises), the sound description and evidence label, the play/stop button, timer chips, the volume slider, and a collapsed `Tuning` section. Each mood group has its own accent color. The interface follows the system light/dark appearance. Animations drift slowly or follow the breath pace and never flicker at 40 Hz. With reduced motion, decorative traces stay still and transitions are minimized; the active breath circle keeps following the guide because it supplies the breathing instruction.
+The full player shows a 60-tick countdown dial around a slowly drifting oscilloscope-style trace (a quiet wavering ring for 40 Hz, a circle that follows the breath for breath guides, a wavering loop for noises), the sound description and evidence label, the play/stop button, timer chips, the volume slider, and a collapsed `Tuning` section. Each mood group has its own accent color. The interface uses a consistent light ivory and forest-green palette with generated nature imagery. Animations drift slowly or follow the breath pace and never flicker at 40 Hz. With reduced motion, decorative traces stay still and transitions are minimized; the active breath circle keeps following the guide because it supplies the breathing instruction.
 
 ### Before You Start
 
-The onboarding sheet (step 1 of 2) asks two questions before playback is enabled:
+Browsing and reading sources require no onboarding. The first playback request opens a sheet with two questions:
 
 - `Sound sensitivity`: `Standard` or `Sensitive`
 - `Listening setup`: `Headphones` or `Speakers`
@@ -71,7 +71,7 @@ These inputs do not attempt to model age, sex, or other demographic variables. T
 
 ### Tone Check
 
-After onboarding, the app opens a `Tone Check` sheet (step 2 of 2). This step compares `220 Hz` and `440 Hz` as candidate base tones.
+If the first selected sound is 40 Hz, onboarding continues to a `Tone Check` sheet comparing `220 Hz` and `440 Hz`. Nature sounds and breath guides use the current base tone without this extra step. The tone check remains available from Settings for every listener. Setup never starts audio automatically; press play again after completing it.
 
 - `Preview` plays a short sample
 - `Use this tone` saves the selected base tone
@@ -81,11 +81,15 @@ The tone check is a listener-preference shortcut. It is intended to help the use
 
 ### Listen tab
 
-The `Listen` tab is built for "pick a sound and listen". Tapping any sound card starts it right away. While playing, tapping another card crossfades to it (keeping the running timer and volume), and tapping the playing card stops it. Nothing is measured or recorded unless the user turns recording on.
+The `Listen` tab is built for "pick a sound and listen". After initial setup, tapping any sound card starts it right away. While playing, tapping another card crossfades to it (keeping the running timer and volume), and tapping the playing card stops it. Nothing is measured or recorded unless the user turns recording on.
 
-#### Suggestion for now
+#### Scene-based curation
 
-Two large cards at the top suggest sounds for the local time of day (morning: resonance breathing / 40 Hz, daytime: pink noise / rain, evening: cyclic sighing / ocean, late night: bedtime breathing / fire). The displayed clock and suggestions refresh together every 20 seconds and when returning to the tab. Each suggestion plays with one tap. It is a rule based on the clock, not a measurement.
+Choose All, Unwind, Rest from thoughts, Before sleep, or Alongside focus. Each scene changes the feature, three recommended sounds, the library subset and external destinations. Changing a filter never starts, stops or switches audio. These are editorial rules based on the selected scene, not a measurement or prediction of mental state or response. Each pick explains the sound and suggested use.
+
+The external selection links to myNoise (customizable rain), Calm (music and soundscapes) and Medito (voice-guided practices and sleep content). Links open a separate tab; external audio is not embedded or downloaded. Language, paid-content and app requirements appear beside the links. Official service information was checked on October 8, 2026; ongoing automatic updates are not implemented.
+
+The collapsible research section includes the 2025 [sound/stress scoping review](https://mental.jmir.org/2025/1/e69120/), a 2026 [sleep/stress trial in 66 college students](https://pubmed.ncbi.nlm.nih.gov/42389090/), and the 2025 [gamma sensory stimulation meta-analysis](https://www.nature.com/articles/s41398-025-03788-4). The sleep trial combined music with pink noise or binaural beats over four weeks; it does not validate this site's standalone noises or 40 Hz tones. The gamma review concerns AD/MCI populations and heterogeneous sensory protocols, and does not establish wellness benefits for healthy audio-only users.
 
 #### Sound library
 

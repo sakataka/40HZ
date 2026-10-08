@@ -14,6 +14,15 @@ function createMockEngine(overrides: Partial<AudioEngine> = {}): AudioEngine {
   };
 }
 
+// Existing playback tests enter setup explicitly; browsing no longer forces it.
+function renderWithSetup(ui: Parameters<typeof render>[0]) {
+  const view = render(ui);
+  if (!screen.queryByRole('dialog') && !getStoredPreferences().userContext?.completedAt) {
+    fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
+  }
+  return view;
+}
+
 function getStoredPreferences() {
   return JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? '{}');
 }
@@ -58,7 +67,7 @@ describe('App', () => {
 
   it('defaults to the recommended 20-minute flow without age or sex inputs', () => {
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
 
     expect(screen.getAllByText('40 Hz').length).toBeGreaterThan(0);
     expect(screen.getAllByText('20分').length).toBeGreaterThan(0);
@@ -68,7 +77,7 @@ describe('App', () => {
 
   it('stores 220Hz when calibration is skipped', async () => {
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'この設定で進む' }));
     fireEvent.click(screen.getByRole('button', { name: 'スキップして 220 Hz を使う' }));
@@ -85,7 +94,7 @@ describe('App', () => {
 
   it('keeps session start disabled until calibration is complete', async () => {
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
 
     expect(screen.getByRole('button', { name: 'セッション開始', hidden: true })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'この設定で進む' }));
@@ -98,7 +107,7 @@ describe('App', () => {
 
   it('keeps keyboard focus inside setup dialogs and restores it to session controls', async () => {
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
 
     const standardOption = screen.getByRole('radio', { name: '標準' });
     expect(standardOption).toHaveFocus();
@@ -114,7 +123,7 @@ describe('App', () => {
 
   it('exposes selected settings and expandable sections to assistive technology', async () => {
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     await finishSetup();
 
     expect(screen.getByRole('button', { name: '20分' })).toHaveAttribute('aria-pressed', 'true');
@@ -131,7 +140,7 @@ describe('App', () => {
 
   it('keeps session start disabled while tone check is being rerun', async () => {
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     await finishSetup();
 
     openTab('設定');
@@ -143,7 +152,7 @@ describe('App', () => {
 
   it('uses more conservative defaults for sound-sensitive users', async () => {
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
 
     fireEvent.click(screen.getByLabelText('音に敏感'));
     fireEvent.click(screen.getByRole('button', { name: 'この設定で進む' }));
@@ -158,7 +167,7 @@ describe('App', () => {
 
   it('keeps technical range controls in advanced settings only', async () => {
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'この設定で進む' }));
@@ -181,7 +190,7 @@ describe('App', () => {
 
   it('shows evidence notes separating supported and exploratory guidance', async () => {
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     await finishSetup();
 
     openTab('設定');
@@ -197,7 +206,7 @@ describe('App', () => {
     vi.setSystemTime(new Date('2026-03-29T00:00:00Z'));
 
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'この設定で進む' }));
@@ -235,7 +244,7 @@ describe('App', () => {
       start: vi.fn().mockReturnValue(deferredStart.promise),
     });
 
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     await finishSetup();
 
     fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
@@ -256,10 +265,10 @@ describe('App', () => {
 
   it('returns to a safe idle state when engine start fails', async () => {
     const engine = createMockEngine({
-      start: vi.fn().mockRejectedValue(new Error('Audio denied')),
+      start: vi.fn().mockRejectedValueOnce(new Error('Audio denied')).mockResolvedValue(undefined),
     });
 
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     await finishSetup();
 
     fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
@@ -267,6 +276,10 @@ describe('App', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'セッション開始' })).toBeEnabled());
     expect(screen.getByRole('status')).toHaveTextContent('停止中');
     expect(screen.queryByRole('button', { name: '停止' })).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('音を再生できませんでした');
+    fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('再生中'));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('does not stop twice for the same stop transition', async () => {
@@ -275,7 +288,7 @@ describe('App', () => {
       stop: vi.fn().mockReturnValue(deferredStop.promise),
     });
 
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     await finishSetup();
 
     fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
@@ -297,7 +310,7 @@ describe('App', () => {
 
   it('keeps the live base tone in sync with advanced edits and profile changes', async () => {
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     await finishSetup();
 
     fireEvent.click(screen.getByRole('button', { name: 'チューニング' }));
@@ -321,7 +334,7 @@ describe('App', () => {
 
   it('rerunning tone check replaces the remembered tone and active settings', async () => {
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     await finishSetup();
 
     fireEvent.click(screen.getByRole('button', { name: 'チューニング' }));
@@ -350,7 +363,7 @@ describe('App', () => {
       start: vi.fn().mockReturnValue(deferredPreview.promise),
     });
 
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     fireEvent.click(screen.getByRole('button', { name: 'この設定で進む' }));
 
     const previewButtons = screen.getAllByRole('button', { name: '試聴' });
@@ -374,7 +387,7 @@ describe('App', () => {
 
   it('stops the active preview before switching to another preview tone', async () => {
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     fireEvent.click(screen.getByRole('button', { name: 'この設定で進む' }));
 
     fireEvent.click(screen.getAllByRole('button', { name: '試聴' })[0]);
@@ -393,7 +406,7 @@ describe('App', () => {
       stop: vi.fn().mockReturnValue(deferredStop.promise),
     });
 
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     fireEvent.click(screen.getByRole('button', { name: 'この設定で進む' }));
     fireEvent.click(screen.getAllByRole('button', { name: '試聴' })[0]);
     await waitFor(() => expect(screen.getByRole('button', { name: '試聴中' })).toBeInTheDocument());
@@ -425,7 +438,7 @@ describe('App', () => {
       start: vi.fn().mockRejectedValue(new Error('Audio denied')),
     });
 
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     fireEvent.click(screen.getByRole('button', { name: 'この設定で進む' }));
     fireEvent.click(screen.getAllByRole('button', { name: '試聴' })[0]);
 
@@ -440,7 +453,7 @@ describe('App', () => {
       start: vi.fn().mockReturnValue(deferredStart.promise),
     });
 
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     await finishSetup();
 
     openTab('設定');
@@ -460,7 +473,7 @@ describe('App', () => {
 
   it('locks timer and tone check during playback while allowing live tuning', async () => {
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     await finishSetup();
     fireEvent.click(screen.getByRole('button', { name: 'チューニング', exact: true }));
     fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
@@ -479,7 +492,7 @@ describe('App', () => {
   it('plays a sound with one tap and switches sounds live without any check-in', async () => {
     window.localStorage.removeItem(TRACKING_STORAGE_KEY);
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     await finishSetup();
 
     const library = screen.getByRole('group', { name: 'サウンド一覧' });
@@ -509,7 +522,7 @@ describe('App', () => {
       JSON.stringify({ prefs: { mode: 'checkin', reactionTest: true }, records: [] }),
     );
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
     await finishSetup();
 
     fireEvent.click(screen.getByRole('button', { name: 'セッション開始' }));
@@ -543,7 +556,7 @@ describe('App', () => {
     );
 
     const engine = createMockEngine();
-    render(<App engine={engine} />);
+    renderWithSetup(<App engine={engine} />);
 
     expect(screen.getByText('5%')).toBeInTheDocument();
     openTab('設定');

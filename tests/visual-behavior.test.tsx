@@ -8,25 +8,23 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('time-of-day suggestions', () => {
-  it('keeps suggestions aligned with the clock across an hour boundary and a background return', () => {
-    vi.useFakeTimers();
-    const morning = new Date();
-    morning.setHours(10, 59, 50, 0);
-    vi.setSystemTime(morning);
-    render(<ListenView activeProfileId="recommended" playing={false} locked={false} blind={false} onSelect={vi.fn()} onOpenRecords={vi.fn()} />);
-    expect(screen.getByText('朝', { exact: true })).toBeInTheDocument();
-
-    act(() => vi.advanceTimersByTime(20_000));
-    expect(screen.getByText('11:00', { exact: true })).toBeInTheDocument();
-    expect(screen.getByText('日中', { exact: true })).toBeInTheDocument();
-
-    const evening = new Date(morning);
-    evening.setHours(18, 0, 0, 0);
-    vi.setSystemTime(evening);
-    fireEvent(document, new Event('visibilitychange'));
-    expect(screen.getByText('18:00', { exact: true })).toBeInTheDocument();
-    expect(screen.getByText('夕方〜夜', { exact: true })).toBeInTheDocument();
+describe('scene-based sound curation', () => {
+  it('changes both the sound picks and external destinations without starting audio', () => {
+    const select = vi.fn();
+    render(<ListenView activeProfileId="recommended" playing={false} locked={false} blind={false} onSelect={select} onOpenRecords={vi.fn()} />);
+    expect(screen.getByText('雨音に包まれる')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '眠る前に', exact: true }));
+    expect(screen.getByRole('heading', { name: '一日の終わりを、静かに。' })).toBeInTheDocument();
+    expect(screen.getByText('低い音に、ひと休み')).toBeInTheDocument();
+    expect(screen.queryByText('雨音に包まれる')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /myNoise/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Calm/ })).toBeInTheDocument();
+    expect(select).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: '低いノイズを聴く' }));
+    expect(select).toHaveBeenCalledWith('noise-brown');
+    fireEvent.click(screen.getByRole('button', { name: 'すべて', exact: true }));
+    expect(screen.getByText('雨音に包まれる')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /myNoise/ })).toBeInTheDocument();
   });
 });
 
