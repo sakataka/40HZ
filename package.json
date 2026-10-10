@@ -9,7 +9,8 @@
     "build": "tsc -b && vite build",
     "build:pages": "tsc -b && vite build --base /40HZ/",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "bun --check --build --threads=4"
   },
   "dependencies": {
     "react": "^19.3.0",
