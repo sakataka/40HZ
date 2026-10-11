@@ -1,0 +1,5 @@
+[test]
+preload = ["./src/test/setup.mjs"]
+
+[serve.static]
+plugins = ["./scripts/css-assets.ts"]

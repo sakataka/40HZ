@@ -1,3 +1,4 @@
+import workletAsset from './worklets/isochronic-processor.js' with {type: 'file'};
 import { getRecommendationProfile } from '../features/session/presets';
 import type { BlindCondition, SessionSettings, StartOptions } from '../features/session/types';
 
@@ -31,7 +32,7 @@ export class IsochronicAudioEngine implements AudioEngine {
 
     try {
       const context = new AudioContext();
-      const workletUrl = new URL('./worklets/isochronic-processor.js', import.meta.url);
+      const workletUrl = new URL(workletAsset, import.meta.url);
       await context.audioWorklet.addModule(workletUrl);
 
       const node = new AudioWorkletNode(context, 'isochronic-processor', {

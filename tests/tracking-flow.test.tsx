@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, jest as vi } from 'bun:test';
 import App from '../src/App';
 import type { AudioEngine } from '../src/audio/engine';
 import { ReactionTest } from '../src/components/ReactionTest';
@@ -110,7 +110,7 @@ describe('tracked sessions', () => {
     fireEvent.click(screen.getByRole('button', { name: '記録して再生' }));
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('再生中'));
 
-    const [, options] = vi.mocked(engine.start).mock.calls.at(-1)!;
+    const [, options] = (engine.start as ReturnType<typeof vi.fn<typeof engine.start>>).mock.calls.at(-1)!;
     expect(['active', 'sham']).toContain(options?.condition);
 
     fireEvent.click(screen.getByRole('button', { name: '停止' }));
@@ -176,6 +176,6 @@ describe('ReactionTest', () => {
     fireEvent.pointerDown(screen.getByRole('button', { name: '今すぐ押す' }));
 
     expect(onComplete).toHaveBeenCalledWith({ medianMs: 250, lapses: 0, falseStarts: 1, trials: 1 });
-    vi.mocked(Math.random).mockRestore();
+    (Math.random as ReturnType<typeof vi.spyOn<typeof Math, 'random'>>).mockRestore();
   });
 });

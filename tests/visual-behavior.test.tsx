@@ -1,9 +1,11 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, jest as vi } from 'bun:test';
 import { ListenView } from '../src/components/ListenView';
 import { ResonanceTrace } from '../src/components/ResonanceTrace';
 
+const originalUserAgent = Object.getOwnPropertyDescriptor(navigator, 'userAgent');
 afterEach(() => {
+  if (originalUserAgent) Object.defineProperty(navigator, 'userAgent', originalUserAgent); else delete (navigator as {userAgent?:string}).userAgent;
   vi.restoreAllMocks();
   vi.useRealTimers();
 });
@@ -30,8 +32,8 @@ describe('scene-based sound curation', () => {
 
 describe('breath trace continuity', () => {
   it('eases between two running breath patterns before following the new pattern', () => {
-    vi.useFakeTimers({ toFake: ['Date', 'performance'] });
-    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Chrome');
+    vi.useFakeTimers();
+    Object.defineProperty(navigator,'userAgent',{configurable:true,get:()=>'Chrome'});
     const context = {
       beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(), closePath: vi.fn(),
       stroke: vi.fn(), clearRect: vi.fn(),

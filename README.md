@@ -251,3 +251,7 @@ In practical terms:
 - the lifespan review supports the decision to avoid demographic auto-tuning
 
 This is the level at which the app uses the literature. It is better understood as a conservative synthesis of limited evidence than as a direct implementation of any single published protocol.
+
+## Bun frontendとテスト
+
+Bun HTML build・React HMR・bun:testを使い、既存のjsdomとTesting Libraryを維持します。WorkletはBunのfile importで内容を変更せず別ファイルへ出力します。LocalWebとPagesは相対URLで同じ動作を保ちます。

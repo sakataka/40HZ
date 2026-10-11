@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, jest as vi } from 'bun:test';
 import App from '../src/App';
 import type { AudioEngine } from '../src/audio/engine';
 import { STORAGE_KEY } from '../src/features/session/storage';

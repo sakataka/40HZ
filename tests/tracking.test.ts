@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import { breathPointAt, breathsPerMinute } from '../src/features/session/breath';
 import {
   mergeHealthSamples,

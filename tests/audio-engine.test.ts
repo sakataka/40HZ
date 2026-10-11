@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, jest as vi } from 'bun:test';
 import { IsochronicAudioEngine } from '../src/audio/engine';
 import type { SessionSettings } from '../src/features/session/types';
 
@@ -68,17 +68,18 @@ let lastGainNode: FakeGainNode | null = null;
 let lastWorkletNode: FakeAudioWorkletNode | null = null;
 let lastContext: FakeAudioContext | null = null;
 
+const audioDescriptors = ['AudioContext', 'AudioWorkletNode'].map(name => [name,Object.getOwnPropertyDescriptor(globalThis,name)] as const);
 describe('IsochronicAudioEngine', () => {
   beforeEach(() => {
     lastGainNode = null;
     lastWorkletNode = null;
     lastContext = null;
-    vi.stubGlobal('AudioContext', FakeAudioContext);
-    vi.stubGlobal('AudioWorkletNode', FakeAudioWorkletNode);
+    Object.defineProperty(globalThis, 'AudioContext', {configurable:true,value:FakeAudioContext});
+    Object.defineProperty(globalThis, 'AudioWorkletNode', {configurable:true,value:FakeAudioWorkletNode});
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    for (const [name,descriptor] of audioDescriptors) { if (descriptor) Object.defineProperty(globalThis,name,descriptor); else Reflect.deleteProperty(globalThis,name); }
   });
 
   it('skips worklet and volume updates when settings do not affect audio output', async () => {
